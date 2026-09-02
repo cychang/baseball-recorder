@@ -88,11 +88,77 @@
       input, select, button { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.03); color: var(--text); font-size: 0.96rem; }
       input::placeholder { color: var(--muted); }
       button { cursor: pointer; font-weight: 700; border: none; background: linear-gradient(135deg, var(--accent), #81defd); color: #041621; }
+      .nav button, .tiny-btn, .close-btn { width: auto; }
       .secondary { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text); }
       .chip { display: inline-block; padding: 6px 10px; border-radius: 999px; font-size: 0.72rem; }
       .chip.win { background: rgba(104, 211, 145, 0.15); color: var(--success); }
       .chip.loss { background: rgba(255, 107, 107, 0.12); color: var(--danger); }
       .status-box { margin-top: 18px; padding: 12px 14px; border-radius: 12px; background: rgba(90, 209, 255, 0.08); border: 1px solid rgba(90, 209, 255, 0.25); color: var(--muted); }
+      .scorekeeper-panel { margin-top: 18px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.08); }
+      .traditional-scoreboard { margin: 16px 0; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); background: #06111a; }
+      .line-score-table { overflow-x: auto; }
+      .line-score-table table { min-width: 520px; }
+      .line-score-table th, .line-score-table td { text-align: center; font-weight: 800; }
+      .line-score-table th:first-child, .line-score-table td:first-child { text-align: left; min-width: 128px; }
+      .scorebug { display: grid; grid-template-columns: 1fr 250px 160px; gap: 14px; align-items: center; padding: 18px; border-top: 1px solid rgba(255,255,255,0.08); }
+      .matchup-box { display: grid; gap: 8px; }
+      .matchup-box strong { font-size: 1.05rem; }
+      .matchup-box span { color: var(--muted); font-size: 0.86rem; }
+      .field-diamond { position: relative; width: 250px; height: 220px; margin: 0 auto; }
+      .base-indicator { position: absolute; width: 42px; height: 42px; padding: 0; transform: rotate(45deg); border-radius: 6px; border: 2px solid rgba(255,255,255,0.35); background: rgba(255,255,255,0.05); }
+      .base-indicator.occupied { background: var(--accent-2); border-color: var(--accent-2); box-shadow: 0 0 18px rgba(255,204,102,0.45); }
+      .base-indicator.first { right: 44px; top: 82px; }
+      .base-indicator.second { left: 104px; top: 34px; }
+      .base-indicator.third { left: 44px; top: 82px; }
+      .base-indicator.drop-ready, .diamond-target.drop-ready { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(90,209,255,0.16); }
+      .home-plate { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); color: var(--muted); font-size: 0.72rem; letter-spacing: 0.08em; }
+      .diamond-target { position: absolute; width: auto; padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.04); color: var(--muted); font-size: 0.72rem; }
+      .home-score-target { left: 50%; bottom: 0; transform: translateX(-50%); }
+      .out-drop-target { right: 0; bottom: 0; color: var(--danger); }
+      .batter-zone { position: absolute; left: 0; bottom: 0; color: var(--muted); font-size: 0.72rem; }
+      .runner-chip { position: absolute; z-index: 2; width: auto; max-width: 92px; padding: 5px 8px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.18); background: #f7fafc; color: #07111a; font-size: 0.7rem; line-height: 1.15; cursor: grab; box-shadow: 0 7px 18px rgba(0,0,0,0.28); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; touch-action: none; user-select: none; }
+      .runner-chip:active { cursor: grabbing; }
+      .runner-chip.dragging { max-width: none; pointer-events: none; opacity: 0.9; }
+      .runner-chip.selected { outline: 3px solid rgba(90,209,255,0.4); }
+      .runner-chip.at-first { right: 0; top: 128px; }
+      .runner-chip.at-second { left: 50%; top: 0; transform: translateX(-50%); }
+      .runner-chip.at-third { left: 0; top: 128px; }
+      .runner-chip.at-batter { left: 0; bottom: 22px; }
+      .runner-chip.at-home { left: 50%; bottom: 22px; transform: translateX(-50%); }
+      .runner-chip.at-out { right: 0; bottom: 22px; background: #ff6b6b; color: #250406; }
+      .run-stepper { position: absolute; top: 0; display: flex; align-items: center; gap: 6px; }
+      .run-stepper .count-stepper { width: 24px; min-width: 24px; height: 24px; font-size: 0.8rem; }
+      .play-run-badge { padding: 5px 8px; border-radius: 999px; background: rgba(104,211,145,0.14); border: 1px solid rgba(104,211,145,0.35); color: var(--success); font-size: 0.72rem; font-weight: 800; }
+      .count-panel { display: grid; gap: 10px; justify-self: end; min-width: 180px; }
+      .count-row { display: grid; grid-template-columns: 24px 1fr; gap: 8px; align-items: center; }
+      .count-row.out-row { grid-template-columns: 24px auto 1fr auto; }
+      .count-label { font-weight: 900; color: var(--accent-2); }
+      .count-lights { display: flex; gap: 7px; }
+      .count-light { appearance: none; display: inline-block; width: 15px; height: 15px; padding: 0; border-radius: 50%; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); }
+      .count-light.on.ball { background: #68d391; border-color: #68d391; }
+      .count-light.on.strike { background: #ffcc66; border-color: #ffcc66; }
+      .count-light.on.out { background: #ff6b6b; border-color: #ff6b6b; }
+      .count-stepper { width: 30px; min-width: 30px; height: 30px; padding: 0; border-radius: 999px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: var(--text); }
+      .field-diamond.preview .base-indicator.occupied { outline: 2px solid rgba(255,255,255,0.35); outline-offset: 3px; }
+      .scorebug-controls { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); }
+      .scorebug-controls:empty { display: none; }
+      .scorebug-controls-label { color: var(--muted); font-size: 0.82rem; }
+      .pitch-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; margin: 12px 0; }
+      .result-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 10px; }
+      .runner-event-actions { display: contents; }
+      .result-actions .tiny-btn.active, .runner-event-actions .tiny-btn.active { background: var(--accent-2); color: #1b1300; border-color: var(--accent-2); }
+      .lineup-form { margin-top: 14px; padding: 14px; border-radius: 14px; border: 1px solid rgba(90, 209, 255, 0.18); background: rgba(90, 209, 255, 0.045); }
+      .lineup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+      .lineup-team { display: grid; gap: 10px; }
+      .lineup-row { display: grid; grid-template-columns: 42px 1fr; gap: 8px; align-items: center; }
+      .lineup-body { display: grid; gap: 14px; margin-top: 14px; }
+      .lineup-body[hidden] { display: none; }
+      button:disabled { opacity: 0.55; cursor: not-allowed; }
+      .event-form { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); }
+      .event-timeline { display: grid; gap: 8px; margin-top: 14px; }
+      .event-row { display: grid; grid-template-columns: 52px 1fr; gap: 10px; align-items: center; border-radius: 12px; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.08); padding: 10px 12px; }
+      .event-seq { color: var(--accent-2); font-weight: 800; }
+      textarea { width: 100%; min-height: 72px; resize: vertical; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.03); color: var(--text); font-size: 0.96rem; }
       .modal-backdrop {
         position: fixed; inset: 0; background: rgba(2, 8, 12, 0.72); display: none; place-items: center; z-index: 30;
       }
@@ -102,7 +168,7 @@
       }
       .modal h3 { margin-top: 0; }
       .close-btn { float: right; background: transparent; border: 1px solid rgba(255,255,255,0.15); color: var(--text); width: auto; padding: 8px 12px; }
-      @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .row { grid-template-columns: 1fr; } }
+      @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .row { grid-template-columns: 1fr; } .scorebug { grid-template-columns: 1fr; } .field-diamond { order: -1; } .count-panel { justify-self: stretch; } .lineup-grid { grid-template-columns: 1fr; } .event-row { grid-template-columns: 1fr; } }
     </style>
   </head>
   <body>
@@ -113,7 +179,8 @@
       </header>
 
       <nav class="nav">
-        <button class="active" data-target="overviewPage">總覽</button>
+        <button data-target="overviewPage">總覽</button>
+        <button class="active" data-target="scorekeeperPage">逐球紀錄</button>
         <button data-target="teamsPage">球隊</button>
         <button data-target="playersPage">球員</button>
         <button data-target="tournamentsPage">盃賽</button>
@@ -125,13 +192,112 @@
         <input id="globalSearchInput" type="text" placeholder="全域關鍵字搜尋" />
       </div>
 
-      <section id="overviewPage" class="page active">
+      <section id="scorekeeperPage" class="page active">
+        <div class="layout">
+          <div class="card panel">
+            <h2>逐球紀錄</h2>
+            <div class="filter-row">
+              <select id="activeGameSelect">
+                <option value="">選擇比賽</option>
+              </select>
+            </div>
+            <div id="scorekeeperPanel" class="scorekeeper-panel" hidden>
+              <div class="row-between">
+                <div>
+                  <h3 id="scorekeeperTitle" style="margin: 0;">比賽記錄</h3>
+                  <div id="scorekeeperMeta" style="margin-top: 6px; color: var(--muted);"></div>
+                </div>
+                <button class="tiny-btn" id="closeScorekeeperBtn" type="button">關閉</button>
+              </div>
+              <div id="traditionalScoreboard" class="traditional-scoreboard">
+                <div id="lineScoreTable" class="line-score-table"></div>
+                <div class="scorebug">
+                  <div id="matchupPanel" class="matchup-box"></div>
+                  <div id="fieldDiamond" class="field-diamond" aria-label="壘包狀況">
+                    <button class="base-indicator second" type="button" data-base-indicator="second" data-preview-base-indicator="second" data-base-drop-target="second" data-runner-target="second" aria-label="二壘"></button>
+                    <button class="base-indicator third" type="button" data-base-indicator="third" data-preview-base-indicator="third" data-base-drop-target="third" data-runner-target="third" aria-label="三壘"></button>
+                    <button class="base-indicator first" type="button" data-base-indicator="first" data-preview-base-indicator="first" data-base-drop-target="first" data-runner-target="first" aria-label="一壘"></button>
+                    <button class="diamond-target home-score-target" type="button" data-home-score-target data-runner-target="home">本壘</button>
+                    <button class="diamond-target out-drop-target" type="button" data-out-drop-target data-runner-target="out">出局</button>
+                    <div class="batter-zone">打者區</div>
+                    <div class="run-stepper">
+                      <button class="count-stepper" type="button" data-runs-action="decrement" aria-label="減少得分">−</button>
+                      <span id="playRunBadge" class="play-run-badge">得分 +0</span>
+                      <button class="count-stepper" type="button" data-runs-action="increment" aria-label="增加得分">+</button>
+                    </div>
+                    <div class="home-plate">HOME</div>
+                  </div>
+                  <div id="countPanel" class="count-panel"></div>
+                  <div id="scoreboardActionPanel" class="scorebug-controls"></div>
+                </div>
+              </div>
+              <form id="lineupForm" class="lineup-form">
+                <div class="row-between">
+                  <div>
+                    <h3 style="margin: 0;">Order 單</h3>
+                    <div style="margin-top: 6px; color: var(--muted);">比賽開始前先排兩隊打序；逐球紀錄會自動帶局半、打者與守方投手。</div>
+                  </div>
+                  <button class="tiny-btn secondary" id="toggleLineupBtn" type="button" aria-expanded="true" aria-controls="lineupBody">收合 Order 單</button>
+                </div>
+                <div id="lineupBody" class="lineup-body">
+                  <div id="lineupEditor" class="lineup-grid"></div>
+                  <button class="tiny-btn" type="submit">儲存 Order 單</button>
+                </div>
+              </form>
+              <form id="eventForm" class="event-form">
+                <div class="pitch-actions">
+                  <button class="tiny-btn secondary" type="button" data-pitch-action="BALL">壞球 Ball</button>
+                  <button class="tiny-btn secondary" type="button" data-pitch-action="CALLED_STRIKE">看著好球</button>
+                  <button class="tiny-btn secondary" type="button" data-pitch-action="SWINGING_STRIKE">揮空</button>
+                  <button class="tiny-btn secondary" type="button" data-pitch-action="FOUL">界外</button>
+                </div>
+                <input name="balls" type="hidden" value="0" />
+                <input name="strikes" type="hidden" value="0" />
+                <input name="eventType" type="hidden" value="PLATE_APPEARANCE" />
+                <input name="result" type="hidden" value="" />
+                <input name="runs" type="hidden" value="0" />
+                <input name="outs" type="hidden" value="0" />
+                <div class="result-actions" aria-label="打席結果">
+                  <button class="tiny-btn secondary active" type="button" data-ready-action>準備</button>
+                  <button class="tiny-btn secondary" type="button" data-result-action="SINGLE">一安</button>
+                  <button class="tiny-btn secondary" type="button" data-result-action="DOUBLE">二安</button>
+                  <button class="tiny-btn secondary" type="button" data-result-action="TRIPLE">三安</button>
+                  <button class="tiny-btn secondary" type="button" data-result-action="HOME_RUN">全壘打</button>
+                  <button class="tiny-btn secondary" type="button" data-result-action="WALK">保送</button>
+                  <button class="tiny-btn secondary" type="button" data-result-action="HIT_BY_PITCH">觸身</button>
+                  <button class="tiny-btn secondary" type="button" data-result-action="STRIKEOUT">三振</button>
+                  <button class="tiny-btn secondary" type="button" data-result-action="DROPPED_THIRD_STRIKE">不死三振</button>
+                  <button class="tiny-btn secondary" type="button" data-result-action="GROUNDOUT">滾地出局</button>
+                  <button class="tiny-btn secondary" type="button" data-result-action="FLYOUT">飛球出局</button>
+                  <button class="tiny-btn secondary" type="button" data-result-action="DOUBLE_PLAY">雙殺</button>
+                  <button class="tiny-btn secondary" type="button" data-result-action="ERROR">失誤上壘</button>
+                  <button class="tiny-btn secondary" type="button" data-result-action="FIELDERS_CHOICE">野選</button>
+                  <button class="tiny-btn secondary" type="button" data-result-action="SACRIFICE">犧牲打</button>
+                </div>
+                <textarea name="notes" placeholder="事件註記"></textarea>
+                <button type="submit">記錄 Play</button>
+              </form>
+            </div>
+          </div>
+          <div class="card panel">
+            <div class="row-between">
+              <h2>Play-by-play</h2>
+              <button class="tiny-btn secondary" type="button" data-undo-last-event disabled>退回上一筆</button>
+            </div>
+            <div id="eventTimeline" class="event-timeline">
+              <div class="mini-card">選擇比賽後開始記錄</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="overviewPage" class="page">
         <div class="stats-grid" id="statsGrid"></div>
         <div class="layout">
           <div class="card panel">
             <h2>球隊列表</h2>
             <table>
-              <thead><tr><th>球隊</th><th>城市</th><th>聯賽</th></tr></thead>
+              <thead><tr><th>球隊</th><th>球員</th><th>勝場</th></tr></thead>
               <tbody id="teamsTable"></tbody>
             </table>
           </div>
@@ -155,35 +321,19 @@
       <section id="teamsPage" class="page">
         <div class="layout">
           <div class="card panel">
-            <h2>新增球隊</h2>
-            <form id="teamForm">
-              <input name="name" type="text" placeholder="球隊名稱" required />
-              <div class="row">
-                <input name="shortName" type="text" placeholder="簡稱" required />
-                <input name="city" type="text" placeholder="城市" required />
-              </div>
-              <div class="row">
-                <select name="league" required>
-                  <option value="">選擇聯賽</option>
-                  <option value="國家聯賽">國家聯賽</option>
-                  <option value="職業聯賽">職業聯賽</option>
-                  <option value="業餘聯賽">業餘聯賽</option>
-                  <option value="學生聯賽">學生聯賽</option>
-                </select>
-                <input name="stadium" type="text" placeholder="球場" required />
-              </div>
-              <button type="submit">新增球隊</button>
-            </form>
-          </div>
-          <div class="card panel">
-            <h2>球隊一覽</h2>
+            <div class="row-between">
+              <h2>球隊一覽</h2>
+              <button class="tiny-btn" type="button" data-create="team">新增球隊</button>
+            </div>
             <div class="filter-row">
               <input id="teamSearchInput" type="text" placeholder="搜尋球隊" />
-              <select id="teamLeagueFilter">
-                <option value="">全部聯賽</option>
-              </select>
             </div>
             <div id="teamList"></div>
+          </div>
+          <div class="card panel">
+            <h2>球隊動作</h2>
+            <p style="color: var(--muted); line-height: 1.7;">列表是主要工作區；需要建立新球隊時再開啟新增視窗。</p>
+            <button type="button" data-create="team">新增球隊</button>
           </div>
         </div>
       </section>
@@ -191,49 +341,19 @@
       <section id="playersPage" class="page">
         <div class="layout">
           <div class="card panel">
-            <h2>新增球員</h2>
-            <form id="playerForm">
-              <input name="name" type="text" placeholder="球員姓名" required />
-              <div class="row">
-                <input name="teamId" type="text" placeholder="球隊 ID" required />
-                <select name="position" required>
-                  <option value="">選擇守備位置</option>
-                  <option value="C">C (捕手)</option>
-                  <option value="1B">1B (一壘手)</option>
-                  <option value="2B">2B (二壘手)</option>
-                  <option value="3B">3B (三壘手)</option>
-                  <option value="SS">SS (游擊手)</option>
-                  <option value="LF">LF (左外野)</option>
-                  <option value="CF">CF (中外野)</option>
-                  <option value="RF">RF (右外野)</option>
-                  <option value="DH">DH (指定打者)</option>
-                  <option value="P">P (投手)</option>
-                </select>
-              </div>
-              <div class="row">
-                <input name="jersey" type="text" placeholder="背號" />
-              </div>
-              <div class="row">
-                <input name="battingAverage" type="number" step="0.001" placeholder="AVG" min="0" max="1" />
-                <input name="ops" type="number" step="0.001" placeholder="OPS" min="0" max="3" />
-              </div>
-              <div class="row">
-                <input name="hr" type="number" placeholder="HR" />
-                <input name="rbi" type="number" placeholder="RBI" />
-              </div>
-              <div class="row">
-                <input name="sb" type="number" placeholder="SB" />
-                <input name="games" type="number" placeholder="出賽數" />
-              </div>
-              <button type="submit">新增球員</button>
-            </form>
-          </div>
-          <div class="card panel">
-            <h2>球員列表</h2>
+            <div class="row-between">
+              <h2>球員列表</h2>
+              <button class="tiny-btn" type="button" data-create="player">新增球員</button>
+            </div>
             <div class="filter-row">
               <input id="playerSearchInput" type="text" placeholder="搜尋球員" />
             </div>
             <div id="playerList"></div>
+          </div>
+          <div class="card panel">
+            <h2>球員動作</h2>
+            <p style="color: var(--muted); line-height: 1.7;">球員頁只維護基本資料；成績會由逐球紀錄自動累加，不在這裡手填。</p>
+            <button type="button" data-create="player">新增球員</button>
           </div>
         </div>
       </section>
@@ -241,37 +361,20 @@
       <section id="tournamentsPage" class="page">
         <div class="layout">
           <div class="card panel">
-            <h2>新增盃賽</h2>
-            <form id="tournamentForm">
-              <input name="name" type="text" placeholder="盃賽名稱" required />
-              <div class="row">
-                <input name="season" type="text" placeholder="賽季" required />
-                <select name="type" required>
-                  <option value="">選擇盃賽類型</option>
-                  <option value="cup">盃賽</option>
-                  <option value="league">聯盟</option>
-                  <option value="international">國際賽</option>
-                </select>
-              </div>
-              <div class="row">
-                <input name="startDate" type="date" required />
-                <input name="endDate" type="date" required />
-              </div>
-              <select name="status">
-                <option value="scheduled">預定</option>
-                <option value="active">進行中</option>
-                <option value="completed">已結束</option>
-              </select>
-              <button type="submit">新增盃賽</button>
-            </form>
-          </div>
-          <div class="card panel">
-            <h2>盃賽列表</h2>
+            <div class="row-between">
+              <h2>盃賽列表</h2>
+              <button class="tiny-btn" type="button" data-create="tournament">新增盃賽</button>
+            </div>
             <div class="filter-row">
               <input id="tournamentSearchInput" type="text" placeholder="搜尋盃賽" />
 
             </div>
             <div id="tournamentList"></div>
+          </div>
+          <div class="card panel">
+            <h2>盃賽動作</h2>
+            <p style="color: var(--muted); line-height: 1.7;">先看盃賽列表；需要新增賽季或杯賽時再開啟新增視窗。</p>
+            <button type="button" data-create="tournament">新增盃賽</button>
           </div>
         </div>
       </section>
@@ -279,46 +382,26 @@
       <section id="gamesPage" class="page">
         <div class="layout">
           <div class="card panel">
-            <h2>新增比賽</h2>
-            <form id="gameForm">
-              <div class="row">
-                <select name="tournamentId" required>
-                  <option value="">選擇盃賽</option>
-                </select>
-                <input name="date" type="date" required />
-              </div>
-              <div class="row">
-                <input name="homeTeamId" type="text" placeholder="主隊 ID" required />
-                <input name="awayTeamId" type="text" placeholder="客隊 ID" required />
-              </div>
-              <div class="row">
-                <input name="score" type="text" placeholder="比分 例：7-4" required />
-                <input name="venue" type="text" placeholder="場地" required />
-              </div>
-              <div class="row">
-                <input name="winnerTeamId" type="text" placeholder="勝隊 ID" />
-              </div>
-              <select name="status" required>
-                <option value="scheduled">預定</option>
-                <option value="live">進行中</option>
-                <option value="completed">已結束</option>
-                <option value="cancelled">取消</option>
-              </select>
-              <button type="submit">新增比賽</button>
-            </form>
-          </div>
-          <div class="card panel">
-            <h2>比賽列表</h2>
+            <div class="row-between">
+              <h2>比賽列表</h2>
+              <button class="tiny-btn" type="button" data-create="game">新增比賽</button>
+            </div>
             <div class="filter-row">
               <input id="gameSearchInput" type="text" placeholder="搜尋比賽" />
               <select id="gameStatusFilter">
                 <option value="">全部狀態</option>
-                <option value="completed">completed</option>
-                <option value="scheduled">scheduled</option>
-                <option value="live">live</option>
+                <option value="not_started">未開始</option>
+                <option value="live">進行中</option>
+                <option value="completed">已結束</option>
+                <option value="cancelled">取消</option>
               </select>
             </div>
             <div id="gamesListDetail"></div>
+          </div>
+          <div class="card panel">
+            <h2>比賽動作</h2>
+            <p style="color: var(--muted); line-height: 1.7;">比賽建立後回到列表，再進入逐球紀錄設定 Order 單。</p>
+            <button type="button" data-create="game">新增比賽</button>
           </div>
         </div>
       </section>
@@ -331,7 +414,7 @@
             <button class="secondary" id="resetDemoBtn" type="button">重置 Demo 資料</button>
           </div>
           <p style="color: var(--muted); line-height: 1.7; margin-top: 18px;">
-            現在的資料模型為：球隊 / 球員 / 盃賽 / 比賽。資料會存放在本地 data/db.json，方便你本地開發與測試。
+            現在的資料模型為：球隊 / 球員 / 盃賽 / 比賽 / 比賽事件。資料會存放在本地 data/baseball.db，方便你本地開發與測試。
           </p>
         </div>
       </section>
@@ -361,9 +444,84 @@
         editForm: document.getElementById('editForm'),
         modalTitle: document.getElementById('modalTitle'),
         closeModalBtn: document.getElementById('closeModalBtn'),
+        scorekeeperPanel: document.getElementById('scorekeeperPanel'),
+        scorekeeperTitle: document.getElementById('scorekeeperTitle'),
+        scorekeeperMeta: document.getElementById('scorekeeperMeta'),
+        traditionalScoreboard: document.getElementById('traditionalScoreboard'),
+        lineScoreTable: document.getElementById('lineScoreTable'),
+        fieldDiamond: document.getElementById('fieldDiamond'),
+        matchupPanel: document.getElementById('matchupPanel'),
+        countPanel: document.getElementById('countPanel'),
+        scoreboardActionPanel: document.getElementById('scoreboardActionPanel'),
+        lineupForm: document.getElementById('lineupForm'),
+        lineupBody: document.getElementById('lineupBody'),
+        lineupEditor: document.getElementById('lineupEditor'),
+        toggleLineupBtn: document.getElementById('toggleLineupBtn'),
+        eventForm: document.getElementById('eventForm'),
+        eventTimeline: document.getElementById('eventTimeline'),
+        undoLastEventBtn: document.querySelector('[data-undo-last-event]'),
+        activeGameSelect: document.getElementById('activeGameSelect'),
       };
 
-      let state = { currentEditType: null, currentEditId: null, tournaments: [] };
+      let state = {
+        currentEditType: null,
+        currentEditId: null,
+        currentScoreGameId: null,
+        tournaments: [],
+        teams: [],
+        players: [],
+        games: [],
+        currentLineups: {},
+        currentContext: null,
+        currentEvents: [],
+        lineupExpanded: false,
+        baseStateTouched: false,
+        runnerDestinations: {},
+        selectedRunnerSource: '',
+        runnerDrag: null,
+        ignoreNextRunnerClick: false,
+      };
+
+      const RESULT_LABELS = {
+        SINGLE: '一壘安打',
+        DOUBLE: '二壘安打',
+        TRIPLE: '三壘安打',
+        HOME_RUN: '全壘打',
+        WALK: '保送',
+        STRIKEOUT: '三振',
+        DROPPED_THIRD_STRIKE: '不死三振',
+        GROUNDOUT: '滾地出局',
+        FLYOUT: '飛球出局',
+        DOUBLE_PLAY: '雙殺',
+        ERROR: '失誤上壘',
+        FIELDERS_CHOICE: '野手選擇',
+        HIT_BY_PITCH: '觸身球',
+        SACRIFICE: '犧牲打',
+        WILD_PITCH: '暴投',
+        BALK: '投手犯規',
+        STOLEN_BASE: '盜壘',
+      };
+
+      const STATUS_LABELS = {
+        not_started: '未開始',
+        live: '進行中',
+        completed: '已結束',
+        cancelled: '取消',
+      };
+
+      const BASE_LABELS = {
+        first: '一壘',
+        second: '二壘',
+        third: '三壘',
+      };
+
+      const DESTINATION_LABELS = {
+        first: '一壘',
+        second: '二壘',
+        third: '三壘',
+        home: '得分',
+        out: '出局',
+      };
 
       function escapeHtml(value) {
         return String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch]));
@@ -379,9 +537,677 @@
         return items.filter((item) => fields.some((field) => String(item[field] ?? '').toLowerCase().includes(query)));
       }
 
+      function getTeamName(teamId) {
+        return (state.teams || []).find((team) => team.id === teamId)?.name || teamId || '未設定';
+      }
+
+      function getPlayerName(playerId) {
+        return (state.players || []).find((player) => player.id === playerId)?.name || playerId || '';
+      }
+
+      function getHalfLabel(half) {
+        return half === 'top' ? '上' : '下';
+      }
+
+      function getResultLabel(result) {
+        return RESULT_LABELS[result] || result || '事件';
+      }
+
+      function getStatusLabel(status) {
+        return STATUS_LABELS[status] || status || '未開始';
+      }
+
+      function buildTeamOptions(selectedId = '') {
+        return '<option value="">選擇球隊</option>' + (state.teams || [])
+          .map((team) => `<option value="${escapeHtml(team.id)}" ${selectedId === team.id ? 'selected' : ''}>${escapeHtml(team.name)}</option>`)
+          .join('');
+      }
+
+      function buildTournamentOptions(selectedId = '') {
+        return '<option value="">選擇盃賽</option>' + (state.tournaments || [])
+          .map((tournament) => `<option value="${escapeHtml(tournament.id)}" ${selectedId === tournament.id ? 'selected' : ''}>${escapeHtml(tournament.name)} / ${escapeHtml(tournament.season)}</option>`)
+          .join('');
+      }
+
+      function buildGameOptions(selectedId = '') {
+        return '<option value="">選擇比賽</option>' + (state.games || [])
+          .map((game) => {
+            const homeName = getTeamName(game.homeTeamId);
+            const awayName = getTeamName(game.awayTeamId);
+            const label = `${game.date || '未定日期'} / ${homeName} vs ${awayName}`;
+            return `<option value="${escapeHtml(game.id)}" ${selectedId === game.id ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+          })
+          .join('');
+      }
+
+      function getCurrentScoreGame() {
+        return (state.games || []).find((game) => game.id === state.currentScoreGameId);
+      }
+
+      function buildPlayerOptions(teamId, placeholder, selectedId = '') {
+        const players = (state.players || []).filter((player) => !teamId || player.teamId === teamId);
+        return `<option value="">${placeholder}</option>` + players
+          .map((player) => `<option value="${escapeHtml(player.id)}" ${selectedId === player.id ? 'selected' : ''}>${escapeHtml(player.name)} #${escapeHtml(player.jersey || '')}</option>`)
+          .join('');
+      }
+
+      function getPlayersForTeam(teamId) {
+        return (state.players || []).filter((player) => player.teamId === teamId);
+      }
+
+      function renderTraditionalScoreboard(game, summary = {}, context = {}) {
+        const maxSummaryInning = Math.max(0, ...(summary.innings || []).map((entry) => Number(entry.inning || 0)));
+        const maxInning = Math.max(1, maxSummaryInning, Number(context.inning || 1));
+        const innings = Array.from({ length: maxInning }, (_, index) => index + 1);
+        const inningCells = (half) => innings.map((inning) => {
+          const row = (summary.innings || []).find((entry) => Number(entry.inning) === inning) || {};
+          return `<td>${Number(row[half] || 0)}</td>`;
+        }).join('');
+
+        ui.lineScoreTable.innerHTML = `
+          <table aria-label="傳統棒球計分板">
+            <thead>
+              <tr><th>TEAM</th>${innings.map((inning) => `<th>${inning}</th>`).join('')}<th>R</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>${escapeHtml(getTeamName(game.awayTeamId))}</td>${inningCells('top')}<td>${Number(summary.awayRuns || 0)}</td></tr>
+              <tr><td>${escapeHtml(getTeamName(game.homeTeamId))}</td>${inningCells('bottom')}<td>${Number(summary.homeRuns || 0)}</td></tr>
+            </tbody>
+          </table>
+        `;
+
+        const halfLabel = context.half === 'bottom' ? '下半' : '上半';
+        ui.matchupPanel.innerHTML = `
+          <strong>${Number(context.inning || 1)} 局 ${halfLabel}</strong>
+          <span>打者 ${escapeHtml(getPlayerName(context.batterId) || '尚未排打序')}</span>
+          <span>投手 ${escapeHtml(getPlayerName(context.pitcherId) || '尚未選投手')}</span>
+          <span>壘上 ${escapeHtml(formatBases(context.bases || {}))}</span>
+        `;
+
+        const countLights = (total, active, kind) => Array.from({ length: total }, (_, index) => {
+          const classes = `count-light ${index < active ? `on ${kind}` : ''}`;
+          const previewAttribute = kind === 'out' ? ' data-preview-out-light' : '';
+          return `<span class="${classes}"${previewAttribute}></span>`;
+        }).join('');
+        ui.countPanel.innerHTML = `
+          <div class="count-row"><span class="count-label">B</span><span class="count-lights">${countLights(3, Number(context.balls || 0), 'ball')}</span></div>
+          <div class="count-row"><span class="count-label">S</span><span class="count-lights">${countLights(2, Number(context.strikes || 0), 'strike')}</span></div>
+          <div class="count-row out-row">
+            <span class="count-label">O</span>
+            <button class="count-stepper" type="button" data-outs-action="decrement" aria-label="減少出局數">−</button>
+            <span class="count-lights">${countLights(3, getAbsoluteOuts(), 'out')}</span>
+            <button class="count-stepper" type="button" data-outs-action="increment" aria-label="增加出局數">+</button>
+          </div>
+        `;
+
+        ui.eventForm.balls.value = Number(context.balls || 0);
+        ui.eventForm.strikes.value = Number(context.strikes || 0);
+        renderScoreboardActionPanel();
+        renderScoreboardPreview();
+      }
+
+      function formatBases(bases = {}) {
+        return ['first', 'second', 'third']
+          .map((base) => bases[base] ? `${BASE_LABELS[base]} ${getPlayerName(bases[base])}` : '')
+          .filter(Boolean)
+          .join(' / ') || '壘上無人';
+      }
+
+      function formatPlayChange(runs = 0, outs = 0) {
+        const runText = Number(runs || 0) > 0 ? `得 ${Number(runs)} 分` : '無得分';
+        const outText = Number(outs || 0) > 0 ? `新增 ${Number(outs)} 出局` : '無新增出局';
+        return `${runText} / ${outText}`;
+      }
+
+      function advanceHitBases(currentBases, batterId, baseCount) {
+        const bases = { first: '', second: '', third: '' };
+        let runs = 0;
+        [
+          { key: 'third', index: 3, runnerId: currentBases.third },
+          { key: 'second', index: 2, runnerId: currentBases.second },
+          { key: 'first', index: 1, runnerId: currentBases.first },
+        ].forEach((base) => {
+          if (!base.runnerId) return;
+          const nextBase = base.index + baseCount;
+          if (nextBase >= 4) runs += 1;
+          else if (nextBase === 3) bases.third = base.runnerId;
+          else if (nextBase === 2) bases.second = base.runnerId;
+          else bases.first = base.runnerId;
+        });
+
+        if (batterId) {
+          if (baseCount >= 4) runs += 1;
+          else if (baseCount === 3) bases.third = batterId;
+          else if (baseCount === 2) bases.second = batterId;
+          else bases.first = batterId;
+        }
+
+        return { bases, runs };
+      }
+
+      function advanceForcedWalk(currentBases, batterId) {
+        const bases = { ...currentBases };
+        let runs = 0;
+
+        if (currentBases.first) {
+          if (currentBases.second) {
+            if (currentBases.third) runs += 1;
+            bases.third = currentBases.second;
+          }
+          bases.second = currentBases.first;
+        }
+        if (batterId) bases.first = batterId;
+
+        return { bases, runs };
+      }
+
+      function advanceRunnerBases(currentBases, baseCount = 1) {
+        return advanceHitBases(currentBases, '', baseCount);
+      }
+
+      function summarizeRunnerDestinations(destinations, context = state.currentContext || {}, includeBatter = true) {
+        const bases = { first: '', second: '', third: '' };
+        let runs = 0;
+        let outs = 0;
+
+        for (const source of getRunnerSources(context, includeBatter)) {
+          const fallback = source.key === 'batter' ? 'batter' : source.key;
+          const destination = destinations[source.key] || fallback;
+          if (destination === 'home') runs += 1;
+          else if (destination === 'out') outs += 1;
+          else if (destination && bases[destination] !== undefined) bases[destination] = source.runnerId;
+        }
+
+        return { bases, runs, outs };
+      }
+
+      function applyForcedAdvanceDestinations(destinations, bases) {
+        if (bases.third && bases.second && bases.first) destinations.third = 'home';
+        if (bases.second && bases.first) destinations.second = 'third';
+        if (bases.first) destinations.first = 'second';
+        destinations.batter = 'first';
+      }
+
+      function getAutomaticPlayAction(result, context = state.currentContext || {}, eventType = ui.eventForm?.eventType?.value || 'PLATE_APPEARANCE') {
+        const batterId = context.batterId || '';
+        const bases = context.bases || { first: '', second: '', third: '' };
+        if (eventType === 'RUNNER_ADVANCEMENT') {
+          if (result === 'WILD_PITCH') return { label: '暴投跑壘', ...advanceRunnerBases(bases, 1) };
+          if (result === 'BALK') return { label: '投手犯規進壘', ...advanceRunnerBases(bases, 1) };
+          if (result === 'STOLEN_BASE') return { label: '盜壘', ...advanceRunnerBases(bases, 1) };
+          return null;
+        }
+        if (!batterId) return null;
+        if (result === 'SINGLE') return { label: '一壘安打', ...advanceHitBases(bases, batterId, 1) };
+        if (result === 'DOUBLE') return { label: '二壘安打', ...advanceHitBases(bases, batterId, 2) };
+        if (result === 'TRIPLE') return { label: '三壘安打', ...advanceHitBases(bases, batterId, 3) };
+        if (result === 'HOME_RUN') return { label: '全壘打', ...advanceHitBases(bases, batterId, 4) };
+        if (result === 'WALK') return { label: '保送', ...advanceForcedWalk(bases, batterId) };
+        if (result === 'HIT_BY_PITCH') return { label: '觸身球', ...advanceForcedWalk(bases, batterId) };
+        if (result === 'DROPPED_THIRD_STRIKE') return { label: '不死三振上壘', ...advanceForcedWalk(bases, batterId), outs: 0 };
+        if (result === 'STRIKEOUT') return { label: '三振', bases, runs: 0, outs: 1 };
+        if (result === 'DOUBLE_PLAY') return { label: '雙殺', bases: { first: '', second: '', third: '' }, runs: 0, outs: 2 };
+        if (result === 'SACRIFICE') return { label: getResultLabel(result), ...advanceRunnerBases(bases, 1), outs: 1 };
+        if (['GROUNDOUT', 'FLYOUT'].includes(result)) return { label: getResultLabel(result), bases, runs: 0, outs: 1 };
+        if (['ERROR', 'FIELDERS_CHOICE'].includes(result)) return { label: getResultLabel(result), ...advanceForcedWalk(bases, batterId), outs: 0 };
+        return null;
+      }
+
+      function getRunnerSources(context = state.currentContext || {}, includeBatter = true) {
+        const bases = context.bases || {};
+        const sources = [
+          { key: 'third', label: '三壘跑者', runnerId: bases.third },
+          { key: 'second', label: '二壘跑者', runnerId: bases.second },
+          { key: 'first', label: '一壘跑者', runnerId: bases.first },
+        ].filter((runner) => runner.runnerId);
+        if (includeBatter && context.batterId) {
+          sources.push({ key: 'batter', label: '打者', runnerId: context.batterId });
+        }
+        return sources;
+      }
+
+      function getAdvancedDestination(sourceKey, baseCount) {
+        const baseIndex = { first: 1, second: 2, third: 3, batter: 0 }[sourceKey];
+        const nextBase = baseIndex + baseCount;
+        if (nextBase >= 4) return 'home';
+        if (nextBase === 3) return 'third';
+        if (nextBase === 2) return 'second';
+        return 'first';
+      }
+
+      function getDefaultRunnerDestinations(result, context = state.currentContext || {}, eventType = ui.eventForm?.eventType?.value || 'PLATE_APPEARANCE') {
+        const bases = context.bases || {};
+        const destinations = {};
+        const includeBatter = eventType === 'PLATE_APPEARANCE';
+        for (const source of getRunnerSources(context, includeBatter)) {
+          destinations[source.key] = source.key === 'batter' ? 'out' : source.key;
+        }
+
+        if (eventType === 'RUNNER_ADVANCEMENT') {
+          Object.keys(destinations).forEach((sourceKey) => { destinations[sourceKey] = getAdvancedDestination(sourceKey, 1); });
+        } else if (result === 'SINGLE') {
+          Object.keys(destinations).forEach((sourceKey) => { destinations[sourceKey] = getAdvancedDestination(sourceKey, 1); });
+        } else if (result === 'DOUBLE') {
+          Object.keys(destinations).forEach((sourceKey) => { destinations[sourceKey] = getAdvancedDestination(sourceKey, 2); });
+        } else if (result === 'TRIPLE') {
+          Object.keys(destinations).forEach((sourceKey) => { destinations[sourceKey] = getAdvancedDestination(sourceKey, 3); });
+        } else if (result === 'HOME_RUN') {
+          Object.keys(destinations).forEach((sourceKey) => { destinations[sourceKey] = 'home'; });
+        } else if (result === 'WALK' || result === 'HIT_BY_PITCH') {
+          applyForcedAdvanceDestinations(destinations, bases);
+        } else if (['DROPPED_THIRD_STRIKE', 'ERROR', 'FIELDERS_CHOICE'].includes(result)) {
+          applyForcedAdvanceDestinations(destinations, bases);
+        } else if (result === 'STRIKEOUT') {
+          destinations.batter = 'out';
+        } else if (result === 'DOUBLE_PLAY') {
+          const runnerOutKey = bases.first ? 'first' : Object.keys(destinations).find((sourceKey) => sourceKey !== 'batter');
+          if (runnerOutKey) destinations[runnerOutKey] = 'out';
+          destinations.batter = 'out';
+        } else if (result === 'SACRIFICE') {
+          Object.keys(destinations)
+            .filter((sourceKey) => sourceKey !== 'batter')
+            .forEach((sourceKey) => { destinations[sourceKey] = getAdvancedDestination(sourceKey, 1); });
+          destinations.batter = 'out';
+        }
+
+        return destinations;
+      }
+
+      function setBaseStateBoardValues(bases = {}) {
+        state.pendingBases = {
+          first: bases.first || '',
+          second: bases.second || '',
+          third: bases.third || '',
+        };
+        renderScoreboardPreview();
+      }
+
+      function getBaseStateBoardValues() {
+        return state.pendingBases || state.currentContext?.bases || { first: '', second: '', third: '' };
+      }
+
+      function getRunnerDestination(sourceKey) {
+        if (state.runnerDestinations[sourceKey]) return state.runnerDestinations[sourceKey];
+        return sourceKey === 'batter' ? 'batter' : sourceKey;
+      }
+
+      function getDestinationOccupant(destinations, target, ignoredSourceKey = '') {
+        return Object.keys(destinations).find((sourceKey) => sourceKey !== ignoredSourceKey && destinations[sourceKey] === target);
+      }
+
+      function tryPushRunnerOneBase(destinations, target, movingSourceKey) {
+        const pushedSourceKey = getDestinationOccupant(destinations, target, movingSourceKey);
+        if (!pushedSourceKey) return true;
+
+        const pushedTarget = getAdvancedDestination(target, 1);
+        if (pushedTarget !== 'home' && getDestinationOccupant(destinations, pushedTarget, pushedSourceKey)) return false;
+
+        destinations[pushedSourceKey] = pushedTarget;
+        return true;
+      }
+
+      function moveRunnerToDestination(sourceKey, target) {
+        const includeBatter = ui.eventForm.eventType.value === 'PLATE_APPEARANCE';
+        const sources = getRunnerSources(state.currentContext || {}, includeBatter);
+        if (!sources.some((source) => source.key === sourceKey)) return false;
+
+        const destinations = { ...state.runnerDestinations };
+        sources.forEach((source) => {
+          if (!destinations[source.key]) destinations[source.key] = source.key === 'batter' ? 'batter' : source.key;
+        });
+
+        if (target === 'home' || target === 'out') {
+          destinations[sourceKey] = target;
+        } else if (['first', 'second', 'third'].includes(target) && !tryPushRunnerOneBase(destinations, target, sourceKey)) {
+          renderInteractiveDiamond();
+          return false;
+        } else {
+          destinations[sourceKey] = target;
+        }
+
+        state.runnerDestinations = destinations;
+        state.selectedRunnerSource = '';
+        state.baseStateTouched = true;
+        applyRunnerDestinations();
+        return true;
+      }
+
+      function startRunnerPointerDrag(event, chip) {
+        const rect = chip.getBoundingClientRect();
+        state.runnerDrag = {
+          chip,
+          sourceKey: chip.dataset.runnerSource,
+          offsetX: event.clientX - rect.left,
+          offsetY: event.clientY - rect.top,
+          moved: false,
+          wasSelected: state.selectedRunnerSource === chip.dataset.runnerSource,
+        };
+        state.selectedRunnerSource = chip.dataset.runnerSource;
+        chip.classList.add('selected');
+        chip.setPointerCapture?.(event.pointerId);
+      }
+
+      function moveRunnerPointerDrag(event) {
+        if (!state.runnerDrag) return;
+        const drag = state.runnerDrag;
+        drag.moved = true;
+        drag.chip.classList.add('dragging');
+        drag.chip.style.position = 'fixed';
+        drag.chip.style.left = `${event.clientX - drag.offsetX}px`;
+        drag.chip.style.top = `${event.clientY - drag.offsetY}px`;
+        drag.chip.style.transform = 'none';
+        drag.chip.style.zIndex = '1000';
+      }
+
+      function finishRunnerPointerDrag(event) {
+        const drag = state.runnerDrag;
+        if (!drag) return;
+        state.runnerDrag = null;
+
+        if (!drag.moved) {
+          state.selectedRunnerSource = drag.wasSelected ? '' : drag.sourceKey;
+          renderInteractiveDiamond();
+          return;
+        }
+        state.ignoreNextRunnerClick = true;
+        const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-runner-target]');
+        if (target) {
+          moveRunnerToDestination(drag.sourceKey, target.dataset.runnerTarget);
+        } else {
+          renderInteractiveDiamond();
+        }
+      }
+
+      function applyRunnerDestinations() {
+        const includeBatter = ui.eventForm.eventType.value === 'PLATE_APPEARANCE';
+
+        for (const source of getRunnerSources(state.currentContext || {}, includeBatter)) {
+          if (!state.runnerDestinations[source.key]) state.runnerDestinations[source.key] = source.key === 'batter' ? 'batter' : source.key;
+        }
+
+        const playState = summarizeRunnerDestinations(state.runnerDestinations, state.currentContext || {}, includeBatter);
+        setBaseStateBoardValues(playState.bases);
+        ui.eventForm.runs.value = String(playState.runs);
+        setAbsoluteOuts(Number(state.currentContext?.outsInHalf || 0) + playState.outs);
+      }
+
+      function getAbsoluteOuts() {
+        return Number(state.currentContext?.outsInHalf || 0) + Number(ui.eventForm.outs.value || 0);
+      }
+
+      function setAbsoluteOuts(targetOuts) {
+        state.baseStateTouched = true;
+        const currentOuts = Number(state.currentContext?.outsInHalf || 0);
+        const absoluteOuts = Math.max(currentOuts, Math.min(3, Number(targetOuts || 0)));
+        ui.eventForm.outs.value = String(Math.max(0, absoluteOuts - currentOuts));
+        renderOutControls();
+      }
+
+      function adjustAbsoluteOuts(delta) {
+        setAbsoluteOuts(getAbsoluteOuts() + Number(delta || 0));
+      }
+
+      function adjustPlayRuns(delta) {
+        const runs = Math.max(0, Number(ui.eventForm.runs.value || 0) + Number(delta || 0));
+        ui.eventForm.runs.value = String(runs);
+        state.baseStateTouched = true;
+        renderRunControls();
+      }
+
+      function renderRunControls() {
+        const runs = Number(ui.eventForm.runs.value || 0);
+        const decrement = ui.fieldDiamond?.querySelector('[data-runs-action="decrement"]');
+        const badge = ui.fieldDiamond?.querySelector('#playRunBadge');
+        if (decrement) decrement.disabled = runs <= 0;
+        if (badge) badge.textContent = `得分 +${runs}`;
+      }
+
+      function renderOutControls() {
+        const currentOuts = Number(state.currentContext?.outsInHalf || 0);
+        const absoluteOuts = getAbsoluteOuts();
+        const decrement = ui.countPanel?.querySelector('[data-outs-action="decrement"]');
+        const increment = ui.countPanel?.querySelector('[data-outs-action="increment"]');
+        if (decrement) decrement.disabled = absoluteOuts <= currentOuts;
+        if (increment) increment.disabled = absoluteOuts >= 3;
+        renderScoreboardPreview();
+      }
+
+      function renderScoreboardPreview() {
+        const bases = getBaseStateBoardValues();
+        renderInteractiveDiamond(bases);
+        ui.countPanel?.querySelectorAll('[data-preview-out-light]').forEach((light, index) => {
+          light.classList.toggle('on', index < getAbsoluteOuts());
+          light.classList.toggle('out', index < getAbsoluteOuts());
+        });
+        renderRunControls();
+      }
+
+      function renderInteractiveDiamond(bases = getBaseStateBoardValues()) {
+        if (!ui.fieldDiamond) return;
+        const includeBatter = ui.eventForm?.eventType?.value === 'PLATE_APPEARANCE';
+        const sources = getRunnerSources(state.currentContext || {}, includeBatter);
+        const baseButton = (baseName) => `
+          <button class="base-indicator ${baseName} ${bases[baseName] ? 'occupied' : ''}" type="button" data-base-indicator="${baseName}" data-preview-base-indicator="${baseName}" data-base-drop-target="${baseName}" data-runner-target="${baseName}" aria-label="${BASE_LABELS[baseName]}"></button>
+        `;
+        const runnerChip = (source) => {
+          const destination = getRunnerDestination(source.key);
+          const target = ['first', 'second', 'third', 'home', 'out'].includes(destination) ? destination : 'batter';
+          const chipLabel = `${source.label.replace('跑者', '')} ${getPlayerName(source.runnerId)}`;
+          const selected = state.selectedRunnerSource === source.key ? ' selected' : '';
+          return `<button class="runner-chip at-${target}${selected}" type="button" draggable="true" data-runner-chip data-runner-source="${escapeHtml(source.key)}" aria-pressed="${state.selectedRunnerSource === source.key}" aria-label="移動${escapeHtml(chipLabel)}">${escapeHtml(chipLabel)}</button>`;
+        };
+
+        ui.fieldDiamond.innerHTML = `
+          <div class="run-stepper">
+            <button class="count-stepper" type="button" data-runs-action="decrement" aria-label="減少得分">−</button>
+            <span id="playRunBadge" class="play-run-badge">得分 +${Number(ui.eventForm.runs.value || 0)}</span>
+            <button class="count-stepper" type="button" data-runs-action="increment" aria-label="增加得分">+</button>
+          </div>
+          ${baseButton('second')}
+          ${baseButton('third')}
+          ${baseButton('first')}
+          <button class="diamond-target home-score-target" type="button" data-home-score-target data-runner-target="home">本壘</button>
+          <button class="diamond-target out-drop-target" type="button" data-out-drop-target data-runner-target="out">出局</button>
+          <div class="batter-zone">打者區</div>
+          <div class="home-plate">HOME</div>
+          ${sources.map((source) => runnerChip(source)).join('')}
+        `;
+        ui.fieldDiamond.classList.toggle('preview', Boolean(state.pendingBases));
+      }
+
+      function renderScoreboardActionPanel() {
+        if (!ui.scoreboardActionPanel) return;
+        ui.scoreboardActionPanel.innerHTML = `
+          <span class="scorebug-controls-label">壘上事件（拖跑者修正後送出）</span>
+          <span class="runner-event-actions" aria-label="壘上事件">
+            <button class="tiny-btn secondary" type="button" data-runner-event-action="WILD_PITCH">暴投</button>
+            <button class="tiny-btn secondary" type="button" data-runner-event-action="BALK">投手犯規</button>
+            <button class="tiny-btn secondary" type="button" data-runner-event-action="STOLEN_BASE">盜壘</button>
+          </span>
+        `;
+        renderOutControls();
+      }
+
+      function updatePlaySubmitState() {
+        const submitButton = ui.eventForm?.querySelector('button[type="submit"]');
+        if (!submitButton) return;
+        submitButton.disabled = !state.currentContext?.lineupReady || !ui.eventForm.result.value;
+      }
+
+      function getLatestEventForUndo(events = state.currentEvents) {
+        return (events || []).reduce((latest, event) => {
+          if (!latest) return event;
+          return Number(event.sequence || 0) > Number(latest.sequence || 0) ? event : latest;
+        }, null);
+      }
+
+      function renderResultActionButtons() {
+        const selectedResult = ui.eventForm.result.value;
+        const readyButton = ui.eventForm.querySelector('[data-ready-action]');
+        if (readyButton) {
+          readyButton.classList.toggle('active', ui.eventForm.eventType.value === 'PLATE_APPEARANCE' && !selectedResult);
+        }
+        ui.eventForm.querySelectorAll('[data-result-action]').forEach((button) => {
+          button.classList.toggle('active', ui.eventForm.eventType.value === 'PLATE_APPEARANCE' && button.dataset.resultAction === selectedResult);
+        });
+        document.querySelectorAll('[data-runner-event-action]').forEach((button) => {
+          button.classList.toggle('active', ui.eventForm.eventType.value === 'RUNNER_ADVANCEMENT' && button.dataset.runnerEventAction === selectedResult);
+        });
+        updatePlaySubmitState();
+      }
+
+      function setReadyPlayState(context = state.currentContext || {}) {
+        const form = ui.eventForm;
+        form.eventType.value = 'PLATE_APPEARANCE';
+        form.result.value = '';
+        form.runs.value = '0';
+        form.outs.value = '0';
+        form.balls.value = Number(context.balls || 0);
+        form.strikes.value = Number(context.strikes || 0);
+        state.baseStateTouched = false;
+        state.runnerDestinations = {};
+        state.selectedRunnerSource = '';
+        state.pendingBases = null;
+        renderResultActionButtons();
+        renderScoreboardPreview();
+        renderOutControls();
+      }
+
+      function applyDefaultPlaySelection() {
+        if (!state.currentContext?.lineupReady) return;
+        const form = ui.eventForm;
+        const result = form.result.value;
+        const action = getAutomaticPlayAction(result, state.currentContext || {}, form.eventType.value);
+
+        if (!action) {
+          renderResultActionButtons();
+          renderInteractiveDiamond();
+          renderOutControls();
+          return;
+        }
+
+        if (!state.baseStateTouched) {
+          state.runnerDestinations = getDefaultRunnerDestinations(result, state.currentContext || {}, form.eventType.value);
+          applyRunnerDestinations();
+          if (form.eventType.value === 'PLATE_APPEARANCE') {
+            form.balls.value = 0;
+            form.strikes.value = 0;
+          }
+        }
+
+        renderResultActionButtons();
+        renderInteractiveDiamond();
+        renderOutControls();
+      }
+
+      function renderLineupEditor(game, lineups = {}) {
+        if (!game) {
+          ui.lineupEditor.innerHTML = '<div class="mini-card">先選擇比賽</div>';
+          return;
+        }
+        const teams = [
+          { id: game.awayTeamId, label: `客隊 ${getTeamName(game.awayTeamId)}` },
+          { id: game.homeTeamId, label: `主隊 ${getTeamName(game.homeTeamId)}` },
+        ];
+        ui.lineupEditor.innerHTML = teams.map((team) => {
+          const lineup = lineups[team.id] || { battingOrder: [] };
+          const selectedByOrder = new Map((lineup.battingOrder || []).map((entry) => [Number(entry.battingOrder), entry.playerId]));
+          const playerCount = Math.max(9, getPlayersForTeam(team.id).length || 1);
+          const rows = Array.from({ length: playerCount }, (_, index) => {
+            const order = index + 1;
+            return `
+              <div class="lineup-row">
+                <strong>#${order}</strong>
+                <select data-lineup-team="${escapeHtml(team.id)}" data-lineup-order="${order}">
+                  ${buildPlayerOptions(team.id, '選擇打者', selectedByOrder.get(order) || '')}
+                </select>
+              </div>
+            `;
+          }).join('');
+          return `
+            <div class="lineup-team">
+              <h4 style="margin: 10px 0 0;">${escapeHtml(team.label)}</h4>
+              ${rows}
+            </div>
+          `;
+        }).join('');
+        updateLineupPlayerLocks();
+      }
+
+      function updateLineupPlayerLocks() {
+        const selectedPlayersByTeam = new Map();
+        ui.lineupEditor.querySelectorAll('select[data-lineup-team]').forEach((select) => {
+          if (!select.value) return;
+          const teamId = select.dataset.lineupTeam;
+          if (!selectedPlayersByTeam.has(teamId)) selectedPlayersByTeam.set(teamId, new Set());
+          selectedPlayersByTeam.get(teamId).add(select.value);
+        });
+
+        ui.lineupEditor.querySelectorAll('select[data-lineup-team]').forEach((select) => {
+          const selectedPlayers = selectedPlayersByTeam.get(select.dataset.lineupTeam) || new Set();
+          select.querySelectorAll('option').forEach((option) => {
+            option.disabled = Boolean(option.value && selectedPlayers.has(option.value) && option.value !== select.value);
+          });
+        });
+      }
+
+      function setLineupExpanded(expanded) {
+        state.lineupExpanded = Boolean(expanded);
+        if (ui.lineupBody) ui.lineupBody.hidden = !state.lineupExpanded;
+        if (ui.toggleLineupBtn) {
+          ui.toggleLineupBtn.setAttribute('aria-expanded', String(state.lineupExpanded));
+          ui.toggleLineupBtn.textContent = state.lineupExpanded ? '收合 Order 單' : '展開 Order 單';
+        }
+      }
+
+      function renderBaseStateBoard(context = {}) {
+        setReadyPlayState(context);
+      }
+
+      function refreshFormOptions() {
+        document.querySelectorAll('select[name="teamId"]').forEach((select) => {
+          const selectedId = select.value;
+          select.innerHTML = buildTeamOptions(selectedId);
+          if (selectedId) select.value = selectedId;
+        });
+        document.querySelectorAll('select[name="homeTeamId"]').forEach((select) => {
+          const selectedId = select.value;
+          select.innerHTML = buildTeamOptions(selectedId).replace('選擇球隊', '選擇主隊');
+          if (selectedId) select.value = selectedId;
+        });
+        document.querySelectorAll('select[name="awayTeamId"]').forEach((select) => {
+          const selectedId = select.value;
+          select.innerHTML = buildTeamOptions(selectedId).replace('選擇球隊', '選擇客隊');
+          if (selectedId) select.value = selectedId;
+        });
+        document.querySelectorAll('select[name="tournamentId"]').forEach((select) => {
+          const selectedId = select.value;
+          select.innerHTML = buildTournamentOptions(selectedId);
+          if (selectedId) select.value = selectedId;
+        });
+        if (ui.activeGameSelect) {
+          const selectedId = state.currentScoreGameId || ui.activeGameSelect.value;
+          ui.activeGameSelect.innerHTML = buildGameOptions(selectedId);
+          if (selectedId) ui.activeGameSelect.value = selectedId;
+        }
+        if (state.currentScoreGameId) {
+          renderLineupEditor(getCurrentScoreGame(), state.currentLineups);
+          renderBaseStateBoard(state.currentContext || {});
+        }
+      }
+
       async function fetchJson(url, options = {}) {
         const res = await fetch(url, options);
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+        if (!res.ok) {
+          let message = `Request failed: ${res.status}`;
+          try {
+            const body = await res.json();
+            message = body.error || message;
+          } catch {
+            message = `Request failed: ${res.status}`;
+          }
+          throw new Error(message);
+        }
         return res.json();
       }
 
@@ -398,11 +1224,15 @@
       async function loadOverview() {
         const data = await fetchJson('/api/overview');
         state.tournaments = data.tournaments || [];
+        state.teams = data.teams || [];
+        state.players = data.players || [];
+        state.games = data.games || [];
         renderStats(data.overview);
         renderTeams(data.teams, data.players, data.games);
         renderGames(data.games, data.teams);
         renderPlayers(data.players, data.teams);
         renderTournaments(data.tournaments, data.games);
+        refreshFormOptions();
       }
 
       function renderStats(overview) {
@@ -421,25 +1251,30 @@
         `).join('');
       }
 
+      function setActivePage(targetId) {
+        document.querySelectorAll('.nav button').forEach(item => item.classList.remove('active'));
+        document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+        const button = document.querySelector(`.nav button[data-target="${targetId}"]`);
+        const page = document.getElementById(targetId);
+        if (button) button.classList.add('active');
+        if (page) page.classList.add('active');
+      }
+
       function renderTeams(teams, players = [], games = []) {
         const query = getSearchValue('teamSearchInput') || getSearchValue('globalSearchInput');
-        const leagueQuery = document.getElementById('teamLeagueFilter') ? document.getElementById('teamLeagueFilter').value : '';
-        const visibleTeams = filterByQuery((teams || []).filter((team) => !leagueQuery || (team.league || '').toLowerCase() === leagueQuery.toLowerCase()), query, ['name', 'shortName', 'city', 'league', 'stadium']);
+        const visibleTeams = filterByQuery(teams || [], query, ['name']);
 
-        ui.teamsTable.innerHTML = visibleTeams.map(team => `
+        ui.teamsTable.innerHTML = visibleTeams.map(team => {
+          const teamPlayers = (players || []).filter((player) => player.teamId === team.id).length;
+          const teamWins = (games || []).filter((game) => game.winnerTeamId === team.id).length;
+          return `
           <tr>
             <td>${escapeHtml(team.name)}</td>
-            <td>${escapeHtml(team.city)}</td>
-            <td>${escapeHtml(team.league)}</td>
+            <td>${teamPlayers}</td>
+            <td>${teamWins}</td>
           </tr>
-        `).join('');
-
-        const leagues = [...new Set((teams || []).map((team) => team.league).filter(Boolean))];
-        const leagueSelect = document.getElementById('teamLeagueFilter');
-        if (leagueSelect) {
-          leagueSelect.innerHTML = '<option value="">全部聯賽</option>' + leagues.map((league) => `<option value="${escapeHtml(league)}">${escapeHtml(league)}</option>`).join('');
-          if (leagueQuery) leagueSelect.value = leagueQuery;
-        }
+        `;
+        }).join('');
 
         ui.teamList.innerHTML = visibleTeams.map(team => {
           const teamPlayers = (players || []).filter((player) => player.teamId === team.id).length;
@@ -448,10 +1283,9 @@
             <div class="mini-card">
               <div class="row-between">
                 <strong>${escapeHtml(team.name)}</strong>
-                <span class="chip">${escapeHtml(team.shortName)}</span>
+                <span class="chip">${escapeHtml(team.id)}</span>
               </div>
-              <div style="margin-top: 8px; color: var(--muted);">${escapeHtml(team.city)} / ${escapeHtml(team.stadium)} / ${escapeHtml(team.league)}</div>
-              <div style="margin-top: 6px; color: var(--muted);">球員 ${teamPlayers} / 勝場 ${teamWins}</div>
+              <div style="margin-top: 8px; color: var(--muted);">球員 ${teamPlayers} / 勝場 ${teamWins}</div>
               <div class="actions">
                 <button class="tiny-btn" data-edit-team="${team.id}">編輯</button>
                 <button class="tiny-btn danger" data-delete-team="${team.id}">刪除</button>
@@ -464,7 +1298,7 @@
       function renderPlayers(players, teams = []) {
         const query = getSearchValue('playerSearchInput') || getSearchValue('globalSearchInput');
         const sorted = [...(players || [])]
-          .filter((player) => filterByQuery([player], query, ['name', 'teamId', 'position', 'jersey']).length > 0)
+          .filter((player) => filterByQuery([player], query, ['name', 'teamId', 'jersey']).length > 0)
           .sort((a, b) => Number(b.ops || 0) - Number(a.ops || 0));
 
         ui.playerList.innerHTML = sorted.map(player => {
@@ -473,10 +1307,10 @@
             <div class="mini-card">
               <div class="row-between">
                 <strong>${escapeHtml(player.name)}</strong>
-                <span class="chip">${escapeHtml(player.position)}</span>
+                <span class="chip">${escapeHtml(teamName)}</span>
               </div>
-              <div style="margin-top: 8px; color: var(--muted);">${escapeHtml(teamName)} / 背號 ${escapeHtml(player.jersey)}</div>
-              <div style="margin-top: 6px; color: var(--muted);">AVG ${Number(player.battingAverage || 0).toFixed(3)} / OPS ${Number(player.ops || 0).toFixed(3)} / HR ${player.hr || 0} / RBI ${player.rbi || 0}</div>
+              <div style="margin-top: 8px; color: var(--muted);">背號 ${escapeHtml(player.jersey)}</div>
+              <div style="margin-top: 6px; color: var(--muted);">PA ${player.plateAppearances || 0} / AB ${player.atBats || 0} / H ${player.hits || 0} / AVG ${Number(player.battingAverage || 0).toFixed(3)} / OPS ${Number(player.ops || 0).toFixed(3)} / HR ${player.hr || 0} / RBI ${player.rbi || 0}</div>
               <div class="actions">
                 <button class="tiny-btn" data-edit-player="${player.id}">編輯</button>
                 <button class="tiny-btn danger" data-delete-player="${player.id}">刪除</button>
@@ -498,7 +1332,7 @@
       function renderTournaments(tournaments, games = []) {
         const query = getSearchValue('tournamentSearchInput') || getSearchValue('globalSearchInput');
         const visibleTournaments = (tournaments || [])
-          .filter((tournament) => filterByQuery([tournament], query, ['name', 'season', 'type']).length > 0);
+          .filter((tournament) => filterByQuery([tournament], query, ['name', 'season']).length > 0);
 
         ui.tournamentList.innerHTML = visibleTournaments.map(item => {
           const gameCount = (games || []).filter((game) => game.tournamentId === item.id).length;
@@ -506,10 +1340,9 @@
             <div class="mini-card">
               <div class="row-between">
                 <strong>${escapeHtml(item.name)}</strong>
-                <span class="chip">${escapeHtml(item.type)}</span>
+                <span class="chip">${escapeHtml(item.season)}</span>
               </div>
-              <div style="margin-top: 8px; color: var(--muted);">${escapeHtml(item.season)}</div>
-              <div style="margin-top: 6px; color: var(--muted);">比賽 ${gameCount}</div>
+              <div style="margin-top: 8px; color: var(--muted);">比賽 ${gameCount}</div>
               <div class="actions">
                 <button class="tiny-btn" data-edit-tournament="${item.id}">編輯</button>
                 <button class="tiny-btn danger" data-delete-tournament="${item.id}">刪除</button>
@@ -522,7 +1355,7 @@
           <div class="mini-card">
             <div class="row-between">
               <strong>${escapeHtml(item.name)}</strong>
-              <span class="chip">${escapeHtml(item.type)}</span>
+              <span class="chip">${escapeHtml(item.season)}</span>
             </div>
           </div>
         `).join('');
@@ -539,16 +1372,20 @@
         const cards = visibleGames.map(game => {
           const homeName = (teams || []).find((team) => team.id === game.homeTeamId)?.name || game.homeTeamId;
           const awayName = (teams || []).find((team) => team.id === game.awayTeamId)?.name || game.awayTeamId;
-          const isWin = game.winnerTeamId === game.homeTeamId;
+          const score = game.eventScore || game.score;
+          const eventCount = Number(game.eventCount || 0);
+          const statusClass = game.status === 'completed' ? 'win' : game.status === 'cancelled' ? 'loss' : '';
           return `
             <div class="mini-card">
               <div class="row-between">
                 <strong>${escapeHtml(game.date)}</strong>
-                <span class="chip ${isWin ? 'win' : 'loss'}">${escapeHtml(game.status || 'completed')}</span>
+                <span class="chip ${statusClass}">${escapeHtml(getStatusLabel(game.status))}</span>
               </div>
               <div style="margin-top: 8px; color: var(--muted);">${escapeHtml(homeName)} vs ${escapeHtml(awayName)}</div>
-              <div style="margin-top: 4px; font-weight: 700;">${escapeHtml(game.score)}</div>
+              <div style="margin-top: 4px; font-weight: 700;">${escapeHtml(score)}</div>
+              <div style="margin-top: 4px; color: var(--muted); font-size: 0.86rem;">事件 ${eventCount}</div>
               <div class="actions">
+                <button class="tiny-btn" data-score-game="${game.id}">記錄</button>
                 <button class="tiny-btn" data-edit-game="${game.id}">編輯</button>
                 <button class="tiny-btn danger" data-delete-game="${game.id}">刪除</button>
               </div>
@@ -560,6 +1397,150 @@
         ui.gamesListDetail.innerHTML = cards || '<div class="mini-card">沒有符合條件的比賽</div>';
       }
 
+      function renderScorekeeper(data) {
+        const game = data.game;
+        const events = data.events || [];
+        const summary = data.summary || {};
+        const homeName = getTeamName(game.homeTeamId);
+        const awayName = getTeamName(game.awayTeamId);
+        const context = data.context || {};
+        state.currentLineups = data.lineups || {};
+        state.currentContext = context;
+        state.currentEvents = events;
+        if (!context.lineupReady) state.lineupExpanded = true;
+
+        ui.scorekeeperTitle.textContent = `${homeName} vs ${awayName}`;
+        ui.scorekeeperMeta.textContent = `${game.date || '未定日期'} / ${game.venue || '未定場地'} / ${getStatusLabel(game.status)}`;
+        renderTraditionalScoreboard(game, summary, context);
+        renderLineupEditor(game, state.currentLineups);
+        setLineupExpanded(state.lineupExpanded);
+        renderBaseStateBoard(context);
+        updatePlaySubmitState();
+        if (ui.undoLastEventBtn) ui.undoLastEventBtn.disabled = events.length === 0;
+
+        ui.eventTimeline.innerHTML = events.length > 0 ? events.slice().reverse().map((event) => {
+          const batter = event.batterId ? ` / 打者 ${escapeHtml(getPlayerName(event.batterId))}` : '';
+          const pitcher = event.pitcherId ? ` / 投手 ${escapeHtml(getPlayerName(event.pitcherId))}` : '';
+          const bases = event.bases ? ` / 壘上 ${escapeHtml(formatBases(event.bases))}` : '';
+          const count = event.eventType === 'PITCH' ? `B-S ${event.balls || 0}-${event.strikes || 0}` : '';
+          const playChange = event.eventType === 'PITCH' ? '' : `${escapeHtml(formatPlayChange(event.runs, event.outs))}`;
+          const countDetail = playChange && count ? ` / ${count}` : '';
+          const eventDetail = `${playChange || count}${countDetail}${batter}${pitcher}${bases}`;
+          const notes = event.notes ? `<div style="margin-top: 4px; color: var(--muted);">${escapeHtml(event.notes)}</div>` : '';
+          return `
+            <div class="event-row">
+              <div class="event-seq">#${event.sequence}</div>
+              <div>
+                <strong>${event.inning}${getHalfLabel(event.half)} ${escapeHtml(getResultLabel(event.result || event.eventType))}</strong>
+                <div style="margin-top: 4px; color: var(--muted);">${eventDetail}</div>
+                ${notes}
+              </div>
+            </div>
+          `;
+        }).join('') : '<div class="mini-card">尚未記錄事件</div>';
+      }
+
+      async function openScorekeeper(gameId) {
+        state.currentScoreGameId = gameId;
+        ui.scorekeeperPanel.hidden = false;
+        if (ui.activeGameSelect) ui.activeGameSelect.value = gameId;
+        setActivePage('scorekeeperPage');
+        const data = await fetchJson(`/api/games/${gameId}/events`);
+        renderScorekeeper(data);
+      }
+
+      function closeScorekeeper() {
+        state.currentScoreGameId = null;
+        state.currentLineups = {};
+        state.currentContext = null;
+        state.currentEvents = [];
+        state.lineupExpanded = false;
+        state.baseStateTouched = false;
+        state.runnerDestinations = {};
+        state.selectedRunnerSource = '';
+        state.pendingBases = null;
+        ui.scorekeeperPanel.hidden = true;
+        if (ui.undoLastEventBtn) ui.undoLastEventBtn.disabled = true;
+        if (ui.activeGameSelect) ui.activeGameSelect.value = '';
+        ui.eventTimeline.innerHTML = '';
+        ui.lineScoreTable.innerHTML = '';
+        ui.matchupPanel.innerHTML = '';
+        ui.countPanel.innerHTML = '';
+        ui.scoreboardActionPanel.innerHTML = '';
+        ui.lineupEditor.innerHTML = '';
+        ui.fieldDiamond.querySelectorAll('[data-base-indicator]').forEach((base) => base.classList.remove('occupied'));
+      }
+
+      async function openDefaultScorekeeper() {
+        const defaultGame = state.games.find((game) => game.status === 'live')
+          || state.games.find((game) => game.status === 'not_started')
+          || state.games[0];
+        if (defaultGame) {
+          await openScorekeeper(defaultGame.id);
+        } else {
+          closeScorekeeper();
+          ui.eventTimeline.innerHTML = '<div class="mini-card">先建立比賽，再開始逐球記錄</div>';
+        }
+      }
+
+      function openCreateModal(type) {
+        state.currentEditType = type;
+        state.currentEditId = null;
+        ui.modalTitle.textContent = '新增 ' + ({ team: '球隊', player: '球員', tournament: '盃賽', game: '比賽' }[type]);
+
+        const today = new Date().toISOString().slice(0, 10);
+        const forms = {
+          team: `
+            <input name="name" placeholder="球隊名稱" required />
+            <button type="submit">新增球隊</button>
+          `,
+          player: `
+            <input name="name" placeholder="球員姓名" required />
+            <div class="row">
+              <select name="teamId" required>
+                ${buildTeamOptions('')}
+              </select>
+              <input name="jersey" placeholder="背號" />
+            </div>
+            <div class="status-box" style="margin-top: 0;">成績會由逐球紀錄自動累加，不在球員資料手動輸入。</div>
+            <button type="submit">新增球員</button>
+          `,
+          tournament: `
+            <input name="name" placeholder="盃賽名稱" required />
+            <input name="season" placeholder="賽季" required />
+            <button type="submit">新增盃賽</button>
+          `,
+          game: `
+            <div class="row">
+              <select name="tournamentId" required>
+                ${buildTournamentOptions('')}
+              </select>
+              <input name="date" type="date" value="${today}" required />
+            </div>
+            <div class="row">
+              <select name="homeTeamId" required>
+                ${buildTeamOptions('').replace('選擇球隊', '選擇主隊')}
+              </select>
+              <select name="awayTeamId" required>
+                ${buildTeamOptions('').replace('選擇球隊', '選擇客隊')}
+              </select>
+            </div>
+            <div class="row"><input name="score" placeholder="比分可空白，例：7-4" /><input name="venue" placeholder="場地" required /></div>
+            <select name="status" required>
+              <option value="not_started">未開始</option>
+              <option value="live">進行中</option>
+              <option value="completed">已結束</option>
+              <option value="cancelled">取消</option>
+            </select>
+            <button type="submit">新增比賽</button>
+          `,
+        };
+
+        ui.editForm.innerHTML = forms[type] || '';
+        ui.editModal.classList.add('visible');
+        ui.editModal.setAttribute('aria-hidden', 'false');
+      }
+
       function openEditModal(type, item) {
         state.currentEditType = type;
         state.currentEditId = item?.id || null;
@@ -569,73 +1550,46 @@
           team: `
             <input type="hidden" name="id" value="${item.id}" />
             <input name="name" value="${escapeHtml(item.name)}" placeholder="球隊名稱" required />
-            <div class="row"><input name="shortName" value="${escapeHtml(item.shortName)}" placeholder="簡稱" required /><input name="city" value="${escapeHtml(item.city)}" placeholder="城市" required /></div>
-            <div class="row">
-              <select name="league" required>
-                <option value="">選擇聯賽</option>
-                <option value="國家聯賽" ${item.league === '國家聯賽' ? 'selected' : ''}>國家聯賽</option>
-                <option value="職業聯賽" ${item.league === '職業聯賽' ? 'selected' : ''}>職業聯賽</option>
-                <option value="業餘聯賽" ${item.league === '業餘聯賽' ? 'selected' : ''}>業餘聯賽</option>
-                <option value="學生聯賽" ${item.league === '學生聯賽' ? 'selected' : ''}>學生聯賽</option>
-              </select>
-              <input name="stadium" value="${escapeHtml(item.stadium)}" placeholder="球場" required />
-            </div>
             <button type="submit">更新球隊</button>
           `,
           player: `
             <input type="hidden" name="id" value="${item.id}" />
             <input name="name" value="${escapeHtml(item.name)}" placeholder="球員姓名" required />
-            <div class="row"><input name="teamId" value="${escapeHtml(item.teamId)}" placeholder="球隊 ID" required />
-              <select name="position" required>
-                <option value="">選擇守備位置</option>
-                <option value="C" ${item.position === 'C' ? 'selected' : ''}>C (捕手)</option>
-                <option value="1B" ${item.position === '1B' ? 'selected' : ''}>1B (一壘手)</option>
-                <option value="2B" ${item.position === '2B' ? 'selected' : ''}>2B (二壘手)</option>
-                <option value="3B" ${item.position === '3B' ? 'selected' : ''}>3B (三壘手)</option>
-                <option value="SS" ${item.position === 'SS' ? 'selected' : ''}>SS (遊擊手)</option>
-                <option value="LF" ${item.position === 'LF' ? 'selected' : ''}>LF (左外野)</option>
-                <option value="CF" ${item.position === 'CF' ? 'selected' : ''}>CF (中外野)</option>
-                <option value="RF" ${item.position === 'RF' ? 'selected' : ''}>RF (右外野)</option>
-                <option value="DH" ${item.position === 'DH' ? 'selected' : ''}>DH (指定打者)</option>
-                <option value="P" ${item.position === 'P' ? 'selected' : ''}>P (投手)</option>
-              </select>
-            </div>
             <div class="row">
+              <select name="teamId" required>
+                ${buildTeamOptions(item.teamId)}
+              </select>
               <input name="jersey" value="${escapeHtml(item.jersey)}" placeholder="背號" />
             </div>
-            <div class="row"><input name="battingAverage" type="number" step="0.001" value="${Number(item.battingAverage || 0)}" placeholder="AVG" /><input name="ops" type="number" step="0.001" value="${Number(item.ops || 0)}" placeholder="OPS" /></div>
-            <div class="row"><input name="hr" type="number" value="${Number(item.hr || 0)}" placeholder="HR" /><input name="rbi" type="number" value="${Number(item.rbi || 0)}" placeholder="RBI" /></div>
-            <div class="row"><input name="sb" type="number" value="${Number(item.sb || 0)}" placeholder="SB" /><input name="games" type="number" value="${Number(item.games || 0)}" placeholder="出賽" /></div>
+            <div class="status-box" style="margin-top: 0;">目前累加：PA ${item.plateAppearances || 0} / AB ${item.atBats || 0} / H ${item.hits || 0} / AVG ${Number(item.battingAverage || 0).toFixed(3)} / OPS ${Number(item.ops || 0).toFixed(3)} / HR ${item.hr || 0} / RBI ${item.rbi || 0}</div>
             <button type="submit">更新球員</button>
           `,
           tournament: `
             <input type="hidden" name="id" value="${item.id}" />
             <input name="name" value="${escapeHtml(item.name)}" placeholder="盃賽名稱" required />
-            <div class="row">
-              <input name="season" value="${escapeHtml(item.season)}" placeholder="賽季" required />
-              <select name="type" required>
-                <option value="">選擇盃賽類型</option>
-                <option value="league" ${item.type === 'league' ? 'selected' : ''}>聯賽</option>
-                <option value="shortterm" ${item.type === 'shortterm' ? 'selected' : ''}>短期</option>
-              </select>
-            </div>
+            <input name="season" value="${escapeHtml(item.season)}" placeholder="賽季" required />
             <button type="submit">更新盃賽</button>
           `,
           game: `
             <input type="hidden" name="id" value="${item.id}" />
             <div class="row">
               <select name="tournamentId" required>
-                <option value="">選擇盃賽</option>
-                ${(state.tournaments || []).map(t => `<option value="${t.id}" ${item.tournamentId === t.id ? 'selected' : ''}>${escapeHtml(t.name)}</option>`).join('')}
+                ${buildTournamentOptions(item.tournamentId)}
               </select>
               <input name="date" type="date" value="${escapeHtml(item.date || '')}" required />
             </div>
-            <div class="row"><input name="homeTeamId" value="${escapeHtml(item.homeTeamId)}" placeholder="主隊 ID" required /><input name="awayTeamId" value="${escapeHtml(item.awayTeamId)}" placeholder="客隊 ID" required /></div>
-            <div class="row"><input name="score" value="${escapeHtml(item.score)}" placeholder="比分" required /><input name="venue" value="${escapeHtml(item.venue)}" placeholder="場地" required /></div>
             <div class="row">
-              <input name="winnerTeamId" value="${escapeHtml(item.winnerTeamId || '')}" placeholder="勝隊 ID" />
+              <select name="homeTeamId" required>
+                ${buildTeamOptions(item.homeTeamId).replace('選擇球隊', '選擇主隊')}
+              </select>
+              <select name="awayTeamId" required>
+                ${buildTeamOptions(item.awayTeamId).replace('選擇球隊', '選擇客隊')}
+              </select>
+            </div>
+            <div class="row"><input name="score" value="${escapeHtml(item.score)}" placeholder="比分可空白，例：7-4" /><input name="venue" value="${escapeHtml(item.venue)}" placeholder="場地" required /></div>
+            <div class="row">
               <select name="status" required>
-                <option value="scheduled" ${(item.status || 'completed') === 'scheduled' ? 'selected' : ''}>預定</option>
+                <option value="not_started" ${(item.status || 'not_started') === 'not_started' ? 'selected' : ''}>未開始</option>
                 <option value="live" ${item.status === 'live' ? 'selected' : ''}>進行中</option>
                 <option value="completed" ${item.status === 'completed' ? 'selected' : ''}>已結束</option>
                 <option value="cancelled" ${item.status === 'cancelled' ? 'selected' : ''}>取消</option>
@@ -659,20 +1613,23 @@
 
       async function submitEdit(event) {
         event.preventDefault();
-        if (!state.currentEditType || !state.currentEditId) return;
+        if (!state.currentEditType) return;
 
         const form = event.target;
         const payload = Object.fromEntries(new FormData(form).entries());
 
-        const endpointMap = {
-          team: `/api/teams/${state.currentEditId}`,
-          player: `/api/players/${state.currentEditId}`,
-          tournament: `/api/tournaments/${state.currentEditId}`,
-          game: `/api/games/${state.currentEditId}`,
+        const collectionMap = {
+          team: '/api/teams',
+          player: '/api/players',
+          tournament: '/api/tournaments',
+          game: '/api/games',
         };
+        const endpoint = state.currentEditId
+          ? `${collectionMap[state.currentEditType]}/${state.currentEditId}`
+          : collectionMap[state.currentEditType];
 
-        await fetchJson(endpointMap[state.currentEditType], {
-          method: 'PUT',
+        await fetchJson(endpoint, {
+          method: state.currentEditId ? 'PUT' : 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
@@ -683,107 +1640,281 @@
 
       document.querySelectorAll('.nav button').forEach(button => {
         button.addEventListener('click', () => {
-          document.querySelectorAll('.nav button').forEach(item => item.classList.remove('active'));
-          document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-          button.classList.add('active');
-          document.getElementById(button.dataset.target).classList.add('active');
+          setActivePage(button.dataset.target);
         });
-      });
-
-      document.getElementById('teamForm').addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const form = event.target;
-        const payload = {
-          name: form.name.value,
-          shortName: form.shortName.value,
-          city: form.city.value,
-          league: form.league.value,
-          stadium: form.stadium.value,
-        };
-        await fetchJson('/api/teams', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        form.reset();
-        loadOverview();
-      });
-
-      document.getElementById('playerForm').addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const form = event.target;
-        const payload = {
-          name: form.name.value,
-          teamId: form.teamId.value,
-          position: form.position.value,
-          jersey: form.jersey.value,
-          battingAverage: Number(form.battingAverage.value || 0),
-          ops: Number(form.ops.value || 0),
-          hr: Number(form.hr.value || 0),
-          rbi: Number(form.rbi.value || 0),
-          sb: Number(form.sb.value || 0),
-        };
-        await fetchJson('/api/players', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        form.reset();
-        loadOverview();
-      });
-
-      document.getElementById('tournamentForm').addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const form = event.target;
-        const payload = {
-          name: form.name.value,
-          season: form.season.value,
-          type: form.type.value,
-          startDate: form.startDate.value,
-          endDate: form.endDate.value,
-          status: form.status.value,
-        };
-        await fetchJson('/api/tournaments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        form.reset();
-        loadOverview();
-      });
-
-      document.getElementById('gameForm').addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const form = event.target;
-        const payload = {
-          tournamentId: form.tournamentId.value,
-          homeTeamId: form.homeTeamId.value,
-          awayTeamId: form.awayTeamId.value,
-          date: form.date.value,
-          venue: form.venue.value,
-          score: form.score.value,
-          winnerTeamId: form.winnerTeamId.value,
-          status: form.status.value,
-        };
-        await fetchJson('/api/games', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        form.reset();
-        // 重新填充盃賽下拉選單
-        const selectTournament = document.querySelector('#gameForm select[name="tournamentId"]');
-        if (selectTournament && state.tournaments.length > 0) {
-          selectTournament.innerHTML = '<option value="">選擇盃賽</option>' + state.tournaments.map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('');
-        }
-        loadOverview();
       });
 
       document.getElementById('resetDemoBtn').addEventListener('click', async () => {
         await fetchJson('/api/reset', { method: 'POST' });
-        loadOverview();
-        loadConfig();
+        closeScorekeeper();
+        await loadOverview();
+        await loadConfig();
+        await openDefaultScorekeeper();
       });
 
       document.getElementById('closeModalBtn').addEventListener('click', closeEditModal);
+      document.getElementById('closeScorekeeperBtn').addEventListener('click', closeScorekeeper);
+      ui.toggleLineupBtn.addEventListener('click', () => {
+        setLineupExpanded(!state.lineupExpanded);
+      });
+      ui.lineupEditor.addEventListener('change', (event) => {
+        if (event.target.matches('select[data-lineup-team]')) updateLineupPlayerLocks();
+      });
+      ui.fieldDiamond.addEventListener('dragstart', (event) => {
+        const chip = event.target.closest('[data-runner-chip]');
+        if (!chip) return;
+        state.selectedRunnerSource = chip.dataset.runnerSource;
+        event.dataTransfer.setData('text/plain', chip.dataset.runnerSource);
+        event.dataTransfer.effectAllowed = 'move';
+        ui.fieldDiamond.querySelectorAll('[data-runner-chip]').forEach((runner) => {
+          runner.classList.toggle('selected', runner.dataset.runnerSource === state.selectedRunnerSource);
+        });
+      });
+      ui.fieldDiamond.addEventListener('dragover', (event) => {
+        if (!event.target.closest('[data-runner-target]')) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+      });
+      ui.fieldDiamond.addEventListener('dragenter', (event) => {
+        const target = event.target.closest('[data-runner-target]');
+        if (target) target.classList.add('drop-ready');
+      });
+      ui.fieldDiamond.addEventListener('dragleave', (event) => {
+        const target = event.target.closest('[data-runner-target]');
+        if (target) target.classList.remove('drop-ready');
+      });
+      ui.fieldDiamond.addEventListener('drop', (event) => {
+        const target = event.target.closest('[data-runner-target]');
+        if (!target) return;
+        event.preventDefault();
+        target.classList.remove('drop-ready');
+        const sourceKey = event.dataTransfer.getData('text/plain') || state.selectedRunnerSource;
+        moveRunnerToDestination(sourceKey, target.dataset.runnerTarget);
+      });
+      ui.fieldDiamond.addEventListener('pointerdown', (event) => {
+        const chip = event.target.closest('[data-runner-chip]');
+        if (!chip || event.button > 0) return;
+        event.preventDefault();
+        startRunnerPointerDrag(event, chip);
+      });
+      ui.fieldDiamond.addEventListener('pointermove', (event) => {
+        moveRunnerPointerDrag(event);
+      });
+      ui.fieldDiamond.addEventListener('pointerup', (event) => {
+        finishRunnerPointerDrag(event);
+      });
+      ui.fieldDiamond.addEventListener('pointercancel', () => {
+        state.runnerDrag = null;
+        renderInteractiveDiamond();
+      });
+      ui.fieldDiamond.addEventListener('click', (event) => {
+        if (state.ignoreNextRunnerClick) {
+          state.ignoreNextRunnerClick = false;
+          return;
+        }
+
+        const runButton = event.target.closest('[data-runs-action]');
+        if (runButton) {
+          adjustPlayRuns(runButton.dataset.runsAction === 'increment' ? 1 : -1);
+          return;
+        }
+
+        const chip = event.target.closest('[data-runner-chip]');
+        if (chip) {
+          state.selectedRunnerSource = state.selectedRunnerSource === chip.dataset.runnerSource ? '' : chip.dataset.runnerSource;
+          renderInteractiveDiamond();
+          return;
+        }
+
+        const target = event.target.closest('[data-runner-target]');
+        if (!target || !state.selectedRunnerSource) return;
+        moveRunnerToDestination(state.selectedRunnerSource, target.dataset.runnerTarget);
+      });
+      ui.countPanel.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-outs-action]');
+        if (!button) return;
+        adjustAbsoluteOuts(button.dataset.outsAction === 'increment' ? 1 : -1);
+      });
+      ui.activeGameSelect.addEventListener('change', async (event) => {
+        const gameId = event.target.value;
+        if (!gameId) {
+          closeScorekeeper();
+          ui.eventTimeline.innerHTML = '<div class="mini-card">選擇比賽後開始記錄</div>';
+          return;
+        }
+        await openScorekeeper(gameId);
+      });
       ui.editModal.addEventListener('click', (event) => {
         if (event.target === ui.editModal) closeEditModal();
       });
       ui.editForm.addEventListener('submit', submitEdit);
+      ui.lineupForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!state.currentScoreGameId) return;
+
+        const game = getCurrentScoreGame();
+        const lineups = [game.awayTeamId, game.homeTeamId].map((teamId) => {
+          const battingOrder = Array.from(ui.lineupEditor.querySelectorAll('select[data-lineup-team]'))
+            .filter((select) => select.dataset.lineupTeam === teamId)
+            .map((select) => select.value)
+            .filter(Boolean);
+          return {
+            teamId,
+            battingOrder,
+          };
+        });
+
+        await fetchJson(`/api/games/${state.currentScoreGameId}/lineups`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lineups }),
+        });
+        state.lineupExpanded = false;
+        await openScorekeeper(state.currentScoreGameId);
+      });
+
+      async function submitPitchAction(action) {
+        if (!state.currentScoreGameId || !state.currentContext?.lineupReady) return;
+
+        const currentBalls = Number(state.currentContext.balls || 0);
+        const currentStrikes = Number(state.currentContext.strikes || 0);
+        const next = {
+          BALL: { balls: Math.min(3, currentBalls + 1), strikes: currentStrikes, notes: 'Ball' },
+          CALLED_STRIKE: { balls: currentBalls, strikes: currentStrikes + 1, notes: 'Called strike' },
+          SWINGING_STRIKE: { balls: currentBalls, strikes: currentStrikes + 1, notes: 'Swinging strike' },
+          FOUL: { balls: currentBalls, strikes: Math.min(2, currentStrikes + (currentStrikes < 2 ? 1 : 0)), notes: 'Foul' },
+        }[action];
+        if (!next) return;
+
+        const isBallFour = action === 'BALL' && currentBalls >= 3;
+        const data = await fetchJson(`/api/games/${state.currentScoreGameId}/events`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventType: isBallFour ? 'PLATE_APPEARANCE' : 'PITCH',
+            result: isBallFour ? 'WALK' : undefined,
+            balls: isBallFour ? 0 : next.balls,
+            strikes: isBallFour ? 0 : next.strikes,
+            notes: isBallFour ? '保送上一壘' : next.notes,
+          }),
+        });
+        renderScorekeeper(data);
+        await loadOverview();
+      }
+
+      async function submitCurrentPlay(form = ui.eventForm) {
+        if (!state.currentScoreGameId) return;
+
+        if (!form.result.value) return;
+        const selectedPlayAction = getAutomaticPlayAction(form.result.value, state.currentContext || {}, form.eventType.value);
+        if (!state.baseStateTouched && selectedPlayAction) {
+          state.runnerDestinations = getDefaultRunnerDestinations(form.result.value, state.currentContext || {}, form.eventType.value);
+          applyRunnerDestinations();
+        }
+        const bases = getBaseStateBoardValues();
+        const payload = {
+          eventType: form.eventType.value,
+          result: form.result.value,
+          runs: Number(form.runs.value || 0),
+          outs: Number(form.outs.value || 0),
+          balls: selectedPlayAction ? 0 : Number(form.balls.value || 0),
+          strikes: selectedPlayAction ? 0 : Number(form.strikes.value || 0),
+          bases,
+          notes: form.notes.value,
+        };
+
+        const data = await fetchJson(`/api/games/${state.currentScoreGameId}/events`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        form.reset();
+        form.eventType.value = 'PLATE_APPEARANCE';
+        form.result.value = '';
+        state.baseStateTouched = false;
+        renderScorekeeper(data);
+        await loadOverview();
+      }
+
+      ui.eventForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        await submitCurrentPlay(event.target);
+      });
 
       document.addEventListener('click', async (event) => {
         const teamId = event.target.getAttribute('data-delete-team');
         const playerId = event.target.getAttribute('data-delete-player');
         const tournamentId = event.target.getAttribute('data-delete-tournament');
         const gameId = event.target.getAttribute('data-delete-game');
+        const scoreGameId = event.target.getAttribute('data-score-game');
+        const readyAction = event.target.closest('[data-ready-action]');
+        const resultAction = event.target.getAttribute('data-result-action');
+        const runnerEventAction = event.target.getAttribute('data-runner-event-action');
+        const undoLastEvent = event.target.closest('[data-undo-last-event]');
         const editTeamId = event.target.getAttribute('data-edit-team');
         const editPlayerId = event.target.getAttribute('data-edit-player');
         const editTournamentId = event.target.getAttribute('data-edit-tournament');
         const editGameId = event.target.getAttribute('data-edit-game');
+        const createType = event.target.getAttribute('data-create');
+        const pitchAction = event.target.getAttribute('data-pitch-action');
+        if (pitchAction) {
+          await submitPitchAction(pitchAction);
+          return;
+        }
+
+        if (readyAction) {
+          setReadyPlayState();
+          return;
+        }
+
+        if (resultAction) {
+          ui.eventForm.eventType.value = 'PLATE_APPEARANCE';
+          ui.eventForm.result.value = resultAction;
+          state.baseStateTouched = false;
+          applyDefaultPlaySelection();
+          return;
+        }
+
+        if (runnerEventAction) {
+          const hasManualRunnerEdit = state.baseStateTouched;
+          const requiresManualRunnerSubmit = ['WILD_PITCH', 'STOLEN_BASE'].includes(runnerEventAction);
+          ui.eventForm.eventType.value = 'RUNNER_ADVANCEMENT';
+          ui.eventForm.result.value = runnerEventAction;
+          if (!hasManualRunnerEdit) {
+            state.baseStateTouched = false;
+            applyDefaultPlaySelection();
+          } else {
+            renderResultActionButtons();
+            renderScoreboardPreview();
+            renderOutControls();
+          }
+          if (requiresManualRunnerSubmit) {
+            updatePlaySubmitState();
+            return;
+          }
+          await submitCurrentPlay();
+          return;
+        }
+
+        if (undoLastEvent && state.currentScoreGameId) {
+          const latestEvent = getLatestEventForUndo();
+          if (!latestEvent) return;
+          const data = await fetchJson(`/api/games/${state.currentScoreGameId}/events/${latestEvent.id}`, { method: 'DELETE' });
+          renderScorekeeper(data);
+          await loadOverview();
+          return;
+        }
+
+        if (createType) {
+          openCreateModal(createType);
+          return;
+        }
+
+        if (scoreGameId) {
+          await openScorekeeper(scoreGameId);
+          return;
+        }
+
         if (teamId) {
           await fetchJson(`/api/teams/${teamId}`, { method: 'DELETE' });
           loadOverview();
@@ -804,6 +1935,7 @@
 
         if (gameId) {
           await fetchJson(`/api/games/${gameId}`, { method: 'DELETE' });
+          if (state.currentScoreGameId === gameId) closeScorekeeper();
           loadOverview();
           return;
         }
@@ -838,7 +1970,7 @@
 
       });
 
-      ['globalSearchInput', 'teamSearchInput', 'playerSearchInput', 'tournamentSearchInput', 'gameSearchInput', 'teamLeagueFilter', 'gameStatusFilter']
+      ['globalSearchInput', 'teamSearchInput', 'playerSearchInput', 'tournamentSearchInput', 'gameSearchInput', 'gameStatusFilter']
         .forEach((id) => {
           const node = document.getElementById(id);
           if (node) node.addEventListener('input', async () => { await loadOverview(); });
@@ -848,11 +1980,8 @@
       async function init() {
         await loadConfig();
         await loadOverview();
-        // 初始化比賽表單的盃賽選單
-        const selectTournament = document.querySelector('#gameForm select[name="tournamentId"]');
-        if (selectTournament && state.tournaments.length > 0) {
-          selectTournament.innerHTML = '<option value="">選擇盃賽</option>' + state.tournaments.map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('');
-        }
+        refreshFormOptions();
+        await openDefaultScorekeeper();
       }
 
       init();
