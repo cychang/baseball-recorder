@@ -1,0 +1,188 @@
+{
+  "teams": [
+    {
+      "id": "t01",
+      "name": "台北猛虎",
+      "shortName": "TPM",
+      "city": "台北市",
+      "league": "國家聯賽",
+      "stadium": "台北體育場"
+    },
+    {
+      "id": "t02",
+      "name": "桃園海盜",
+      "shortName": "TYD",
+      "city": "桃園市",
+      "league": "國家聯賽",
+      "stadium": "桃園球場"
+    },
+    {
+      "id": "t03",
+      "name": "高雄電狼",
+      "shortName": "KSW",
+      "city": "高雄市",
+      "league": "國家聯賽",
+      "stadium": "高雄體育場"
+    },
+    {
+      "id": "t1788330753396",
+      "name": "Test",
+      "shortName": "T",
+      "city": "C",
+      "league": "invalid-league",
+      "stadium": "S"
+    },
+    {
+      "id": "t1788330753411",
+      "name": "Test",
+      "shortName": "T",
+      "city": "C",
+      "league": "國家聯賽",
+      "stadium": "S"
+    }
+  ],
+  "players": [
+    {
+      "id": "p01",
+      "name": "陳偉漢",
+      "teamId": "t01",
+      "position": "C",
+      "jersey": "27",
+      "battingAverage": 0.318,
+      "ops": 0.942,
+      "hr": 7,
+      "rbi": 23,
+      "sb": 11,
+      "status": "active"
+    },
+    {
+      "id": "p02",
+      "name": "林志豪",
+      "teamId": "t01",
+      "position": "RF",
+      "jersey": "8",
+      "battingAverage": 0.289,
+      "ops": 0.871,
+      "hr": 5,
+      "rbi": 19,
+      "sb": 8,
+      "status": "active"
+    },
+    {
+      "id": "p03",
+      "name": "王柏融",
+      "teamId": "t02",
+      "position": "1B",
+      "jersey": "15",
+      "battingAverage": 0.307,
+      "ops": 0.913,
+      "hr": 6,
+      "rbi": 21,
+      "sb": 4,
+      "status": "active"
+    },
+    {
+      "id": "p04",
+      "name": "鄭宗豪",
+      "teamId": "t03",
+      "position": "SP",
+      "jersey": "31",
+      "battingAverage": 0.075,
+      "ops": 0.42,
+      "hr": 0,
+      "rbi": 2,
+      "sb": 2,
+      "status": "active"
+    },
+    {
+      "id": "p1788330753420",
+      "name": "Test",
+      "teamId": "t01",
+      "position": "invalid",
+      "jersey": "1",
+      "battingAverage": 0,
+      "ops": 0,
+      "hr": 0,
+      "rbi": 0,
+      "sb": 0,
+      "status": "active"
+    },
+    {
+      "id": "p1788330753429",
+      "name": "Test",
+      "teamId": "t01",
+      "position": "C",
+      "jersey": "1",
+      "battingAverage": 0,
+      "ops": 0,
+      "hr": 0,
+      "rbi": 0,
+      "sb": 0,
+      "status": "active"
+    }
+  ],
+  "tournaments": [
+    {
+      "id": "cup01",
+      "name": "2026 春季盃",
+      "season": "2026",
+      "type": "cup",
+      "startDate": "2026-03-01",
+      "endDate": "2026-05-31",
+      "status": "active"
+    },
+    {
+      "id": "cup02",
+      "name": "2026 台灣國際邀請賽",
+      "season": "2026",
+      "type": "international",
+      "startDate": "2026-06-01",
+      "endDate": "2026-08-31",
+      "status": "scheduled"
+    },
+    {
+      "id": "cup1788330520023",
+      "name": "jb",
+      "season": "fall",
+      "type": "league",
+      "startDate": "2026-09-01",
+      "endDate": "2027-01-31",
+      "status": "active"
+    }
+  ],
+  "games": [
+    {
+      "id": "g01",
+      "tournamentId": "cup01",
+      "homeTeamId": "t01",
+      "awayTeamId": "t02",
+      "date": "2026-04-10",
+      "venue": "台北體育場",
+      "score": "7-4",
+      "winnerTeamId": "t01",
+      "status": "completed"
+    },
+    {
+      "id": "g02",
+      "tournamentId": "cup01",
+      "homeTeamId": "t03",
+      "awayTeamId": "t01",
+      "date": "2026-04-12",
+      "venue": "高雄體育場",
+      "score": "5-2",
+      "winnerTeamId": "t03",
+      "status": "completed"
+    },
+    {
+      "id": "g03",
+      "tournamentId": "cup01",
+      "homeTeamId": "t02",
+      "awayTeamId": "t03",
+      "date": "2026-04-18",
+      "venue": "桃園球場",
+      "score": "9-3",
+      "winnerTeamId": "t02",
+      "status": "completed"
+    }
+  ]
+}

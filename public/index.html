@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Baseball Record Manager</title>
+    <style>
+      :root {
+        --bg: #07141f;
+        --panel: #11293a;
+        --panel-2: #18384d;
+        --accent: #5ad1ff;
+        --accent-2: #ffcc66;
+        --text: #edf9ff;
+        --muted: #9bb7c9;
+        --success: #68d391;
+        --danger: #ff6b6b;
+        --shadow: rgba(0,0,0,0.22);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Arial, "Noto Sans TC", sans-serif;
+        background: linear-gradient(180deg, #050d16 0%, #0d1d2a 100%);
+        color: var(--text);
+      }
+      .container { max-width: 1300px; margin: 0 auto; padding: 28px 18px 60px; }
+      header {
+        display: flex; justify-content: space-between; align-items: center; gap: 18px;
+        margin-bottom: 22px; flex-wrap: wrap;
+      }
+      .brand { font-size: 2.2rem; font-weight: 800; letter-spacing: 0.08em; }
+      .badge {
+        display: inline-block; border-radius: 999px; padding: 8px 14px;
+        background: rgba(90, 209, 255, 0.12); border: 1px solid rgba(90, 209, 255, 0.45);
+        color: var(--accent); font-size: 0.82rem;
+      }
+      .nav { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+      .nav button {
+        border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; background: rgba(255,255,255,0.04);
+        color: var(--text); padding: 10px 16px; cursor: pointer; font-weight: 700;
+      }
+      .nav button.active {
+        background: linear-gradient(135deg, var(--accent), #7ae0ff); color: #031721;
+      }
+      .stats-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-bottom: 22px;
+      }
+      .card {
+        border-radius: 18px; background: rgba(17, 41, 58, 0.92); border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 18px 40px var(--shadow);
+      }
+      .stat-card { padding: 22px 20px; }
+      .stat-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+      .stat-value { font-size: 2rem; font-weight: 800; }
+      .page { display: none; }
+      .page.active { display: block; }
+      .panel { padding: 22px; }
+      .toolbar {
+        display: flex; justify-content: flex-end; margin-bottom: 18px;
+      }
+      .toolbar input, .toolbar select {
+        max-width: 280px;
+      }
+      .filter-row {
+        display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;
+      }
+      .filter-row input, .filter-row select {
+        flex: 1; min-width: 150px;
+      }
+      .list-block { display: grid; gap: 12px; }
+      .mini-card {
+        padding: 14px 16px; border-radius: 14px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08);
+      }
+      .row-between { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+      .actions { display: flex; gap: 8px; margin-top: 10px; }
+      .tiny-btn {
+        padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: var(--text); cursor: pointer; font-weight: 600; font-size: 0.8rem;
+      }
+      .tiny-btn.danger { background: rgba(255, 107, 107, 0.1); border-color: rgba(255,107,107,0.3); color: #ffb4b4; }
+      .panel h2 { margin: 0 0 18px; }
+      .layout { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 22px; }
+      .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.08); text-align: left; }
+      th { color: var(--muted); font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; }
+      form { display: grid; gap: 14px; }
+      input, select, button { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.03); color: var(--text); font-size: 0.96rem; }
+      input::placeholder { color: var(--muted); }
+      button { cursor: pointer; font-weight: 700; border: none; background: linear-gradient(135deg, var(--accent), #81defd); color: #041621; }
+      .secondary { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text); }
+      .chip { display: inline-block; padding: 6px 10px; border-radius: 999px; font-size: 0.72rem; }
+      .chip.win { background: rgba(104, 211, 145, 0.15); color: var(--success); }
+      .chip.loss { background: rgba(255, 107, 107, 0.12); color: var(--danger); }
+      .status-box { margin-top: 18px; padding: 12px 14px; border-radius: 12px; background: rgba(90, 209, 255, 0.08); border: 1px solid rgba(90, 209, 255, 0.25); color: var(--muted); }
+      .modal-backdrop {
+        position: fixed; inset: 0; background: rgba(2, 8, 12, 0.72); display: none; place-items: center; z-index: 30;
+      }
+      .modal-backdrop.visible { display: grid; }
+      .modal {
+        width: min(760px, calc(100vw - 28px)); max-height: 85vh; overflow: auto; background: #0d2130; border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+      }
+      .modal h3 { margin-top: 0; }
+      .close-btn { float: right; background: transparent; border: 1px solid rgba(255,255,255,0.15); color: var(--text); width: auto; padding: 8px 12px; }
+      @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .row { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="brand">BASEBALL TRACKER</div>
+        <div class="badge" id="dataSourceBadge">Local File</div>
+      </header>
+
+      <nav class="nav">
+        <button class="active" data-target="overviewPage">總覽</button>
+        <button data-target="teamsPage">球隊</button>
+        <button data-target="playersPage">球員</button>
+        <button data-target="tournamentsPage">盃賽</button>
+        <button data-target="gamesPage">比賽</button>
+        <button data-target="settingsPage">資料設定</button>
+      </nav>
+
+      <div class="toolbar">
+        <input id="globalSearchInput" type="text" placeholder="全域關鍵字搜尋" />
+      </div>
+
+      <section id="overviewPage" class="page active">
+        <div class="stats-grid" id="statsGrid"></div>
+        <div class="layout">
+          <div class="card panel">
+            <h2>球隊列表</h2>
+            <table>
+              <thead><tr><th>球隊</th><th>城市</th><th>聯賽</th></tr></thead>
+              <tbody id="teamsTable"></tbody>
+            </table>
+          </div>
+          <div class="card panel">
+            <h2>近期比賽</h2>
+            <div id="gamesList"></div>
+          </div>
+        </div>
+        <div class="layout" style="margin-top: 22px;">
+          <div class="card panel">
+            <h2>球員排行</h2>
+            <div id="topPlayersList" class="list-block"></div>
+          </div>
+          <div class="card panel">
+            <h2>盃賽進度</h2>
+            <div id="tournamentStatusList" class="list-block"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="teamsPage" class="page">
+        <div class="layout">
+          <div class="card panel">
+            <h2>新增球隊</h2>
+            <form id="teamForm">
+              <input name="name" type="text" placeholder="球隊名稱" required />
+              <div class="row">
+                <input name="shortName" type="text" placeholder="簡稱" required />
+                <input name="city" type="text" placeholder="城市" required />
+              </div>
+              <div class="row">
+                <select name="league" required>
+                  <option value="">選擇聯賽</option>
+                  <option value="國家聯賽">國家聯賽</option>
+                  <option value="職業聯賽">職業聯賽</option>
+                  <option value="業餘聯賽">業餘聯賽</option>
+                  <option value="學生聯賽">學生聯賽</option>
+                </select>
+                <input name="stadium" type="text" placeholder="球場" required />
+              </div>
+              <button type="submit">新增球隊</button>
+            </form>
+          </div>
+          <div class="card panel">
+            <h2>球隊一覽</h2>
+            <div class="filter-row">
+              <input id="teamSearchInput" type="text" placeholder="搜尋球隊" />
+              <select id="teamLeagueFilter">
+                <option value="">全部聯賽</option>
+              </select>
+            </div>
+            <div id="teamList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="playersPage" class="page">
+        <div class="layout">
+          <div class="card panel">
+            <h2>新增球員</h2>
+            <form id="playerForm">
+              <input name="name" type="text" placeholder="球員姓名" required />
+              <div class="row">
+                <input name="teamId" type="text" placeholder="球隊 ID" required />
+                <select name="position" required>
+                  <option value="">選擇守備位置</option>
+                  <option value="C">C (捕手)</option>
+                  <option value="1B">1B (一壘手)</option>
+                  <option value="2B">2B (二壘手)</option>
+                  <option value="3B">3B (三壘手)</option>
+                  <option value="SS">SS (游擊手)</option>
+                  <option value="LF">LF (左外野)</option>
+                  <option value="CF">CF (中外野)</option>
+                  <option value="RF">RF (右外野)</option>
+                  <option value="DH">DH (指定打者)</option>
+                  <option value="P">P (投手)</option>
+                </select>
+              </div>
+              <div class="row">
+                <input name="jersey" type="text" placeholder="背號" />
+              </div>
+              <div class="row">
+                <input name="battingAverage" type="number" step="0.001" placeholder="AVG" min="0" max="1" />
+                <input name="ops" type="number" step="0.001" placeholder="OPS" min="0" max="3" />
+              </div>
+              <div class="row">
+                <input name="hr" type="number" placeholder="HR" />
+                <input name="rbi" type="number" placeholder="RBI" />
+              </div>
+              <div class="row">
+                <input name="sb" type="number" placeholder="SB" />
+                <input name="games" type="number" placeholder="出賽數" />
+              </div>
+              <button type="submit">新增球員</button>
+            </form>
+          </div>
+          <div class="card panel">
+            <h2>球員列表</h2>
+            <div class="filter-row">
+              <input id="playerSearchInput" type="text" placeholder="搜尋球員" />
+            </div>
+            <div id="playerList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tournamentsPage" class="page">
+        <div class="layout">
+          <div class="card panel">
+            <h2>新增盃賽</h2>
+            <form id="tournamentForm">
+              <input name="name" type="text" placeholder="盃賽名稱" required />
+              <div class="row">
+                <input name="season" type="text" placeholder="賽季" required />
+                <select name="type" required>
+                  <option value="">選擇盃賽類型</option>
+                  <option value="cup">盃賽</option>
+                  <option value="league">聯盟</option>
+                  <option value="international">國際賽</option>
+                </select>
+              </div>
+              <div class="row">
+                <input name="startDate" type="date" required />
+                <input name="endDate" type="date" required />
+              </div>
+              <select name="status">
+                <option value="scheduled">預定</option>
+                <option value="active">進行中</option>
+                <option value="completed">已結束</option>
+              </select>
+              <button type="submit">新增盃賽</button>
+            </form>
+          </div>
+          <div class="card panel">
+            <h2>盃賽列表</h2>
+            <div class="filter-row">
+              <input id="tournamentSearchInput" type="text" placeholder="搜尋盃賽" />
+
+            </div>
+            <div id="tournamentList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="gamesPage" class="page">
+        <div class="layout">
+          <div class="card panel">
+            <h2>新增比賽</h2>
+            <form id="gameForm">
+              <div class="row">
+                <select name="tournamentId" required>
+                  <option value="">選擇盃賽</option>
+                </select>
+                <input name="date" type="date" required />
+              </div>
+              <div class="row">
+                <input name="homeTeamId" type="text" placeholder="主隊 ID" required />
+                <input name="awayTeamId" type="text" placeholder="客隊 ID" required />
+              </div>
+              <div class="row">
+                <input name="score" type="text" placeholder="比分 例：7-4" required />
+                <input name="venue" type="text" placeholder="場地" required />
+              </div>
+              <div class="row">
+                <input name="winnerTeamId" type="text" placeholder="勝隊 ID" />
+              </div>
+              <select name="status" required>
+                <option value="scheduled">預定</option>
+                <option value="live">進行中</option>
+                <option value="completed">已結束</option>
+                <option value="cancelled">取消</option>
+              </select>
+              <button type="submit">新增比賽</button>
+            </form>
+          </div>
+          <div class="card panel">
+            <h2>比賽列表</h2>
+            <div class="filter-row">
+              <input id="gameSearchInput" type="text" placeholder="搜尋比賽" />
+              <select id="gameStatusFilter">
+                <option value="">全部狀態</option>
+                <option value="completed">completed</option>
+                <option value="scheduled">scheduled</option>
+                <option value="live">live</option>
+              </select>
+            </div>
+            <div id="gamesListDetail"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="settingsPage" class="page">
+        <div class="card panel">
+          <h2>資料設定</h2>
+          <div class="status-box" id="configStatus">載入中...</div>
+          <div style="margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap;">
+            <button class="secondary" id="resetDemoBtn" type="button">重置 Demo 資料</button>
+          </div>
+          <p style="color: var(--muted); line-height: 1.7; margin-top: 18px;">
+            現在的資料模型為：球隊 / 球員 / 盃賽 / 比賽。資料會存放在本地 data/db.json，方便你本地開發與測試。
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <div id="editModal" class="modal-backdrop" aria-hidden="true">
+      <div class="modal">
+        <button type="button" class="close-btn" id="closeModalBtn">關閉</button>
+        <h3 id="modalTitle">編輯資料</h3>
+        <form id="editForm"></form>
+      </div>
+    </div>
+
+    <script>
+      const ui = {
+        statsGrid: document.getElementById('statsGrid'),
+        teamsTable: document.getElementById('teamsTable'),
+        teamList: document.getElementById('teamList'),
+        playerList: document.getElementById('playerList'),
+        tournamentList: document.getElementById('tournamentList'),
+        gamesList: document.getElementById('gamesList'),
+        gamesListDetail: document.getElementById('gamesListDetail'),
+        configStatus: document.getElementById('configStatus'),
+        dataSourceBadge: document.getElementById('dataSourceBadge'),
+        globalSearchInput: document.getElementById('globalSearchInput'),
+        editModal: document.getElementById('editModal'),
+        editForm: document.getElementById('editForm'),
+        modalTitle: document.getElementById('modalTitle'),
+        closeModalBtn: document.getElementById('closeModalBtn'),
+      };
+
+      let state = { currentEditType: null, currentEditId: null, tournaments: [] };
+
+      function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch]));
+      }
+
+      function getSearchValue(id) {
+        const el = document.getElementById(id);
+        return el ? el.value.trim().toLowerCase() : '';
+      }
+
+      function filterByQuery(items, query, fields) {
+        if (!query) return items;
+        return items.filter((item) => fields.some((field) => String(item[field] ?? '').toLowerCase().includes(query)));
+      }
+
+      async function fetchJson(url, options = {}) {
+        const res = await fetch(url, options);
+        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+        return res.json();
+      }
+
+      async function loadConfig() {
+        const config = await fetchJson('/api/config');
+        ui.dataSourceBadge.textContent = config.dataSource || 'Local File';
+        ui.configStatus.innerHTML = `
+          <strong>資料來源：</strong> ${config.dataSource || 'Local File'}<br />
+          <strong>Google Drive 啟用：</strong> ${config.googleDriveEnabled ? '是' : '否'}<br />
+          <strong>憑證狀態：</strong> ${config.hasCredentials ? '已配置' : '未配置'}
+        `;
+      }
+
+      async function loadOverview() {
+        const data = await fetchJson('/api/overview');
+        state.tournaments = data.tournaments || [];
+        renderStats(data.overview);
+        renderTeams(data.teams, data.players, data.games);
+        renderGames(data.games, data.teams);
+        renderPlayers(data.players, data.teams);
+        renderTournaments(data.tournaments, data.games);
+      }
+
+      function renderStats(overview) {
+        const cards = [
+          { label: '球隊', value: overview.totalTeams },
+          { label: '球員', value: overview.totalPlayers },
+          { label: '盃賽', value: overview.totalTournaments },
+          { label: '比賽', value: overview.totalGames },
+          { label: '勝場', value: overview.totalWins },
+        ];
+        ui.statsGrid.innerHTML = cards.map(item => `
+          <div class="card stat-card">
+            <div class="stat-label">${item.label}</div>
+            <div class="stat-value">${item.value}</div>
+          </div>
+        `).join('');
+      }
+
+      function renderTeams(teams, players = [], games = []) {
+        const query = getSearchValue('teamSearchInput') || getSearchValue('globalSearchInput');
+        const leagueQuery = document.getElementById('teamLeagueFilter') ? document.getElementById('teamLeagueFilter').value : '';
+        const visibleTeams = filterByQuery((teams || []).filter((team) => !leagueQuery || (team.league || '').toLowerCase() === leagueQuery.toLowerCase()), query, ['name', 'shortName', 'city', 'league', 'stadium']);
+
+        ui.teamsTable.innerHTML = visibleTeams.map(team => `
+          <tr>
+            <td>${escapeHtml(team.name)}</td>
+            <td>${escapeHtml(team.city)}</td>
+            <td>${escapeHtml(team.league)}</td>
+          </tr>
+        `).join('');
+
+        const leagues = [...new Set((teams || []).map((team) => team.league).filter(Boolean))];
+        const leagueSelect = document.getElementById('teamLeagueFilter');
+        if (leagueSelect) {
+          leagueSelect.innerHTML = '<option value="">全部聯賽</option>' + leagues.map((league) => `<option value="${escapeHtml(league)}">${escapeHtml(league)}</option>`).join('');
+          if (leagueQuery) leagueSelect.value = leagueQuery;
+        }
+
+        ui.teamList.innerHTML = visibleTeams.map(team => {
+          const teamPlayers = (players || []).filter((player) => player.teamId === team.id).length;
+          const teamWins = (games || []).filter((game) => game.winnerTeamId === team.id).length;
+          return `
+            <div class="mini-card">
+              <div class="row-between">
+                <strong>${escapeHtml(team.name)}</strong>
+                <span class="chip">${escapeHtml(team.shortName)}</span>
+              </div>
+              <div style="margin-top: 8px; color: var(--muted);">${escapeHtml(team.city)} / ${escapeHtml(team.stadium)} / ${escapeHtml(team.league)}</div>
+              <div style="margin-top: 6px; color: var(--muted);">球員 ${teamPlayers} / 勝場 ${teamWins}</div>
+              <div class="actions">
+                <button class="tiny-btn" data-edit-team="${team.id}">編輯</button>
+                <button class="tiny-btn danger" data-delete-team="${team.id}">刪除</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function renderPlayers(players, teams = []) {
+        const query = getSearchValue('playerSearchInput') || getSearchValue('globalSearchInput');
+        const sorted = [...(players || [])]
+          .filter((player) => filterByQuery([player], query, ['name', 'teamId', 'position', 'jersey']).length > 0)
+          .sort((a, b) => Number(b.ops || 0) - Number(a.ops || 0));
+
+        ui.playerList.innerHTML = sorted.map(player => {
+          const teamName = (teams || []).find((team) => team.id === player.teamId)?.name || player.teamId;
+          return `
+            <div class="mini-card">
+              <div class="row-between">
+                <strong>${escapeHtml(player.name)}</strong>
+                <span class="chip">${escapeHtml(player.position)}</span>
+              </div>
+              <div style="margin-top: 8px; color: var(--muted);">${escapeHtml(teamName)} / 背號 ${escapeHtml(player.jersey)}</div>
+              <div style="margin-top: 6px; color: var(--muted);">AVG ${Number(player.battingAverage || 0).toFixed(3)} / OPS ${Number(player.ops || 0).toFixed(3)} / HR ${player.hr || 0} / RBI ${player.rbi || 0}</div>
+              <div class="actions">
+                <button class="tiny-btn" data-edit-player="${player.id}">編輯</button>
+                <button class="tiny-btn danger" data-delete-player="${player.id}">刪除</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        document.getElementById('topPlayersList').innerHTML = sorted.slice(0, 5).map((player, index) => `
+          <div class="mini-card">
+            <div class="row-between">
+              <strong>#${index + 1} ${escapeHtml(player.name)}</strong>
+              <span class="chip">OPS ${Number(player.ops || 0).toFixed(3)}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function renderTournaments(tournaments, games = []) {
+        const query = getSearchValue('tournamentSearchInput') || getSearchValue('globalSearchInput');
+        const visibleTournaments = (tournaments || [])
+          .filter((tournament) => filterByQuery([tournament], query, ['name', 'season', 'type']).length > 0);
+
+        ui.tournamentList.innerHTML = visibleTournaments.map(item => {
+          const gameCount = (games || []).filter((game) => game.tournamentId === item.id).length;
+          return `
+            <div class="mini-card">
+              <div class="row-between">
+                <strong>${escapeHtml(item.name)}</strong>
+                <span class="chip">${escapeHtml(item.type)}</span>
+              </div>
+              <div style="margin-top: 8px; color: var(--muted);">${escapeHtml(item.season)}</div>
+              <div style="margin-top: 6px; color: var(--muted);">比賽 ${gameCount}</div>
+              <div class="actions">
+                <button class="tiny-btn" data-edit-tournament="${item.id}">編輯</button>
+                <button class="tiny-btn danger" data-delete-tournament="${item.id}">刪除</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        document.getElementById('tournamentStatusList').innerHTML = visibleTournaments.map(item => `
+          <div class="mini-card">
+            <div class="row-between">
+              <strong>${escapeHtml(item.name)}</strong>
+              <span class="chip">${escapeHtml(item.type)}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function renderGames(games, teams = []) {
+        const query = getSearchValue('gameSearchInput') || getSearchValue('globalSearchInput');
+        const statusFilter = document.getElementById('gameStatusFilter') ? document.getElementById('gameStatusFilter').value : '';
+        const visibleGames = (games || [])
+          .filter((game) => !statusFilter || (game.status || '').toLowerCase() === statusFilter.toLowerCase())
+          .filter((game) => filterByQuery([game], query, ['date', 'homeTeamId', 'awayTeamId', 'score', 'venue', 'status']).length > 0)
+          .slice(0, 10);
+
+        const cards = visibleGames.map(game => {
+          const homeName = (teams || []).find((team) => team.id === game.homeTeamId)?.name || game.homeTeamId;
+          const awayName = (teams || []).find((team) => team.id === game.awayTeamId)?.name || game.awayTeamId;
+          const isWin = game.winnerTeamId === game.homeTeamId;
+          return `
+            <div class="mini-card">
+              <div class="row-between">
+                <strong>${escapeHtml(game.date)}</strong>
+                <span class="chip ${isWin ? 'win' : 'loss'}">${escapeHtml(game.status || 'completed')}</span>
+              </div>
+              <div style="margin-top: 8px; color: var(--muted);">${escapeHtml(homeName)} vs ${escapeHtml(awayName)}</div>
+              <div style="margin-top: 4px; font-weight: 700;">${escapeHtml(game.score)}</div>
+              <div class="actions">
+                <button class="tiny-btn" data-edit-game="${game.id}">編輯</button>
+                <button class="tiny-btn danger" data-delete-game="${game.id}">刪除</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        ui.gamesList.innerHTML = cards;
+        ui.gamesListDetail.innerHTML = cards || '<div class="mini-card">沒有符合條件的比賽</div>';
+      }
+
+      function openEditModal(type, item) {
+        state.currentEditType = type;
+        state.currentEditId = item?.id || null;
+        ui.modalTitle.textContent = '編輯 ' + ({ team: '球隊', player: '球員', tournament: '盃賽', game: '比賽' }[type]);
+
+        const forms = {
+          team: `
+            <input type="hidden" name="id" value="${item.id}" />
+            <input name="name" value="${escapeHtml(item.name)}" placeholder="球隊名稱" required />
+            <div class="row"><input name="shortName" value="${escapeHtml(item.shortName)}" placeholder="簡稱" required /><input name="city" value="${escapeHtml(item.city)}" placeholder="城市" required /></div>
+            <div class="row">
+              <select name="league" required>
+                <option value="">選擇聯賽</option>
+                <option value="國家聯賽" ${item.league === '國家聯賽' ? 'selected' : ''}>國家聯賽</option>
+                <option value="職業聯賽" ${item.league === '職業聯賽' ? 'selected' : ''}>職業聯賽</option>
+                <option value="業餘聯賽" ${item.league === '業餘聯賽' ? 'selected' : ''}>業餘聯賽</option>
+                <option value="學生聯賽" ${item.league === '學生聯賽' ? 'selected' : ''}>學生聯賽</option>
+              </select>
+              <input name="stadium" value="${escapeHtml(item.stadium)}" placeholder="球場" required />
+            </div>
+            <button type="submit">更新球隊</button>
+          `,
+          player: `
+            <input type="hidden" name="id" value="${item.id}" />
+            <input name="name" value="${escapeHtml(item.name)}" placeholder="球員姓名" required />
+            <div class="row"><input name="teamId" value="${escapeHtml(item.teamId)}" placeholder="球隊 ID" required />
+              <select name="position" required>
+                <option value="">選擇守備位置</option>
+                <option value="C" ${item.position === 'C' ? 'selected' : ''}>C (捕手)</option>
+                <option value="1B" ${item.position === '1B' ? 'selected' : ''}>1B (一壘手)</option>
+                <option value="2B" ${item.position === '2B' ? 'selected' : ''}>2B (二壘手)</option>
+                <option value="3B" ${item.position === '3B' ? 'selected' : ''}>3B (三壘手)</option>
+                <option value="SS" ${item.position === 'SS' ? 'selected' : ''}>SS (遊擊手)</option>
+                <option value="LF" ${item.position === 'LF' ? 'selected' : ''}>LF (左外野)</option>
+                <option value="CF" ${item.position === 'CF' ? 'selected' : ''}>CF (中外野)</option>
+                <option value="RF" ${item.position === 'RF' ? 'selected' : ''}>RF (右外野)</option>
+                <option value="DH" ${item.position === 'DH' ? 'selected' : ''}>DH (指定打者)</option>
+                <option value="P" ${item.position === 'P' ? 'selected' : ''}>P (投手)</option>
+              </select>
+            </div>
+            <div class="row">
+              <input name="jersey" value="${escapeHtml(item.jersey)}" placeholder="背號" />
+            </div>
+            <div class="row"><input name="battingAverage" type="number" step="0.001" value="${Number(item.battingAverage || 0)}" placeholder="AVG" /><input name="ops" type="number" step="0.001" value="${Number(item.ops || 0)}" placeholder="OPS" /></div>
+            <div class="row"><input name="hr" type="number" value="${Number(item.hr || 0)}" placeholder="HR" /><input name="rbi" type="number" value="${Number(item.rbi || 0)}" placeholder="RBI" /></div>
+            <div class="row"><input name="sb" type="number" value="${Number(item.sb || 0)}" placeholder="SB" /><input name="games" type="number" value="${Number(item.games || 0)}" placeholder="出賽" /></div>
+            <button type="submit">更新球員</button>
+          `,
+          tournament: `
+            <input type="hidden" name="id" value="${item.id}" />
+            <input name="name" value="${escapeHtml(item.name)}" placeholder="盃賽名稱" required />
+            <div class="row">
+              <input name="season" value="${escapeHtml(item.season)}" placeholder="賽季" required />
+              <select name="type" required>
+                <option value="">選擇盃賽類型</option>
+                <option value="league" ${item.type === 'league' ? 'selected' : ''}>聯賽</option>
+                <option value="shortterm" ${item.type === 'shortterm' ? 'selected' : ''}>短期</option>
+              </select>
+            </div>
+            <button type="submit">更新盃賽</button>
+          `,
+          game: `
+            <input type="hidden" name="id" value="${item.id}" />
+            <div class="row">
+              <select name="tournamentId" required>
+                <option value="">選擇盃賽</option>
+                ${(state.tournaments || []).map(t => `<option value="${t.id}" ${item.tournamentId === t.id ? 'selected' : ''}>${escapeHtml(t.name)}</option>`).join('')}
+              </select>
+              <input name="date" type="date" value="${escapeHtml(item.date || '')}" required />
+            </div>
+            <div class="row"><input name="homeTeamId" value="${escapeHtml(item.homeTeamId)}" placeholder="主隊 ID" required /><input name="awayTeamId" value="${escapeHtml(item.awayTeamId)}" placeholder="客隊 ID" required /></div>
+            <div class="row"><input name="score" value="${escapeHtml(item.score)}" placeholder="比分" required /><input name="venue" value="${escapeHtml(item.venue)}" placeholder="場地" required /></div>
+            <div class="row">
+              <input name="winnerTeamId" value="${escapeHtml(item.winnerTeamId || '')}" placeholder="勝隊 ID" />
+              <select name="status" required>
+                <option value="scheduled" ${(item.status || 'completed') === 'scheduled' ? 'selected' : ''}>預定</option>
+                <option value="live" ${item.status === 'live' ? 'selected' : ''}>進行中</option>
+                <option value="completed" ${item.status === 'completed' ? 'selected' : ''}>已結束</option>
+                <option value="cancelled" ${item.status === 'cancelled' ? 'selected' : ''}>取消</option>
+              </select>
+            </div>
+            <button type="submit">更新比賽</button>
+          `,
+        };
+
+        ui.editForm.innerHTML = forms[type] || '';
+        ui.editModal.classList.add('visible');
+        ui.editModal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeEditModal() {
+        ui.editModal.classList.remove('visible');
+        ui.editModal.setAttribute('aria-hidden', 'true');
+        state.currentEditType = null;
+        state.currentEditId = null;
+      }
+
+      async function submitEdit(event) {
+        event.preventDefault();
+        if (!state.currentEditType || !state.currentEditId) return;
+
+        const form = event.target;
+        const payload = Object.fromEntries(new FormData(form).entries());
+
+        const endpointMap = {
+          team: `/api/teams/${state.currentEditId}`,
+          player: `/api/players/${state.currentEditId}`,
+          tournament: `/api/tournaments/${state.currentEditId}`,
+          game: `/api/games/${state.currentEditId}`,
+        };
+
+        await fetchJson(endpointMap[state.currentEditType], {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        closeEditModal();
+        await loadOverview();
+      }
+
+      document.querySelectorAll('.nav button').forEach(button => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('.nav button').forEach(item => item.classList.remove('active'));
+          document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+          button.classList.add('active');
+          document.getElementById(button.dataset.target).classList.add('active');
+        });
+      });
+
+      document.getElementById('teamForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const payload = {
+          name: form.name.value,
+          shortName: form.shortName.value,
+          city: form.city.value,
+          league: form.league.value,
+          stadium: form.stadium.value,
+        };
+        await fetchJson('/api/teams', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        form.reset();
+        loadOverview();
+      });
+
+      document.getElementById('playerForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const payload = {
+          name: form.name.value,
+          teamId: form.teamId.value,
+          position: form.position.value,
+          jersey: form.jersey.value,
+          battingAverage: Number(form.battingAverage.value || 0),
+          ops: Number(form.ops.value || 0),
+          hr: Number(form.hr.value || 0),
+          rbi: Number(form.rbi.value || 0),
+          sb: Number(form.sb.value || 0),
+        };
+        await fetchJson('/api/players', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        form.reset();
+        loadOverview();
+      });
+
+      document.getElementById('tournamentForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const payload = {
+          name: form.name.value,
+          season: form.season.value,
+          type: form.type.value,
+          startDate: form.startDate.value,
+          endDate: form.endDate.value,
+          status: form.status.value,
+        };
+        await fetchJson('/api/tournaments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        form.reset();
+        loadOverview();
+      });
+
+      document.getElementById('gameForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const payload = {
+          tournamentId: form.tournamentId.value,
+          homeTeamId: form.homeTeamId.value,
+          awayTeamId: form.awayTeamId.value,
+          date: form.date.value,
+          venue: form.venue.value,
+          score: form.score.value,
+          winnerTeamId: form.winnerTeamId.value,
+          status: form.status.value,
+        };
+        await fetchJson('/api/games', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        form.reset();
+        // 重新填充盃賽下拉選單
+        const selectTournament = document.querySelector('#gameForm select[name="tournamentId"]');
+        if (selectTournament && state.tournaments.length > 0) {
+          selectTournament.innerHTML = '<option value="">選擇盃賽</option>' + state.tournaments.map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('');
+        }
+        loadOverview();
+      });
+
+      document.getElementById('resetDemoBtn').addEventListener('click', async () => {
+        await fetchJson('/api/reset', { method: 'POST' });
+        loadOverview();
+        loadConfig();
+      });
+
+      document.getElementById('closeModalBtn').addEventListener('click', closeEditModal);
+      ui.editModal.addEventListener('click', (event) => {
+        if (event.target === ui.editModal) closeEditModal();
+      });
+      ui.editForm.addEventListener('submit', submitEdit);
+
+      document.addEventListener('click', async (event) => {
+        const teamId = event.target.getAttribute('data-delete-team');
+        const playerId = event.target.getAttribute('data-delete-player');
+        const tournamentId = event.target.getAttribute('data-delete-tournament');
+        const gameId = event.target.getAttribute('data-delete-game');
+        const editTeamId = event.target.getAttribute('data-edit-team');
+        const editPlayerId = event.target.getAttribute('data-edit-player');
+        const editTournamentId = event.target.getAttribute('data-edit-tournament');
+        const editGameId = event.target.getAttribute('data-edit-game');
+        if (teamId) {
+          await fetchJson(`/api/teams/${teamId}`, { method: 'DELETE' });
+          loadOverview();
+          return;
+        }
+
+        if (playerId) {
+          await fetchJson(`/api/players/${playerId}`, { method: 'DELETE' });
+          loadOverview();
+          return;
+        }
+
+        if (tournamentId) {
+          await fetchJson(`/api/tournaments/${tournamentId}`, { method: 'DELETE' });
+          loadOverview();
+          return;
+        }
+
+        if (gameId) {
+          await fetchJson(`/api/games/${gameId}`, { method: 'DELETE' });
+          loadOverview();
+          return;
+        }
+
+        if (editTeamId) {
+          const data = await fetchJson('/api/overview');
+          const item = data.teams.find((entry) => entry.id === editTeamId);
+          if (item) openEditModal('team', item);
+          return;
+        }
+
+        if (editPlayerId) {
+          const data = await fetchJson('/api/overview');
+          const item = data.players.find((entry) => entry.id === editPlayerId);
+          if (item) openEditModal('player', item);
+          return;
+        }
+
+        if (editTournamentId) {
+          const data = await fetchJson('/api/overview');
+          const item = data.tournaments.find((entry) => entry.id === editTournamentId);
+          if (item) openEditModal('tournament', item);
+          return;
+        }
+
+        if (editGameId) {
+          const data = await fetchJson('/api/overview');
+          const item = data.games.find((entry) => entry.id === editGameId);
+          if (item) openEditModal('game', item);
+          return;
+        }
+
+      });
+
+      ['globalSearchInput', 'teamSearchInput', 'playerSearchInput', 'tournamentSearchInput', 'gameSearchInput', 'teamLeagueFilter', 'gameStatusFilter']
+        .forEach((id) => {
+          const node = document.getElementById(id);
+          if (node) node.addEventListener('input', async () => { await loadOverview(); });
+          if (node) node.addEventListener('change', async () => { await loadOverview(); });
+        });
+
+      async function init() {
+        await loadConfig();
+        await loadOverview();
+        // 初始化比賽表單的盃賽選單
+        const selectTournament = document.querySelector('#gameForm select[name="tournamentId"]');
+        if (selectTournament && state.tournaments.length > 0) {
+          selectTournament.innerHTML = '<option value="">選擇盃賽</option>' + state.tournaments.map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('');
+        }
+      }
+
+      init();
+    </script>
+  </body>
+</html>
