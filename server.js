@@ -158,10 +158,13 @@ const ENUMS = {
   gameStatus: ['not_started', 'live', 'completed', 'cancelled'],
   halfInning: ['top', 'bottom'],
   eventType: ['PLATE_APPEARANCE', 'PITCH', 'RUNNER_ADVANCEMENT', 'SUBSTITUTION', 'NOTE'],
-  playResult: ['SINGLE', 'DOUBLE', 'TRIPLE', 'HOME_RUN', 'WALK', 'STRIKEOUT', 'DROPPED_THIRD_STRIKE', 'GROUNDOUT', 'FLYOUT', 'DOUBLE_PLAY', 'ERROR', 'FIELDERS_CHOICE', 'HIT_BY_PITCH', 'SACRIFICE', 'WILD_PITCH', 'BALK', 'STOLEN_BASE'],
+  playResult: ['SINGLE', 'DOUBLE', 'TRIPLE', 'HOME_RUN', 'WALK', 'STRIKEOUT', 'DROPPED_THIRD_STRIKE', 'GROUNDOUT', 'FLYOUT', 'DOUBLE_PLAY', 'ERROR', 'FIELDERS_CHOICE', 'HIT_BY_PITCH', 'SACRIFICE', 'WILD_PITCH', 'BALK', 'STOLEN_BASE', 'PICKOFF'],
 };
 
 const EMPTY_BASES = { first: '', second: '', third: '' };
+const FIELDING_RESULTS = new Set(['GROUNDOUT', 'FLYOUT']);
+const FIELDER_POSITIONS = new Set(['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF']);
+const RUNNER_REQUIRED_RESULTS = new Set(['DOUBLE_PLAY', 'FIELDERS_CHOICE', 'SACRIFICE']);
 const idCounters = new Map();
 const recordIdTables = new Set(['teams', 'players', 'tournaments', 'games']);
 
@@ -246,6 +249,7 @@ db.exec(`
     batterId TEXT,
     pitcherId TEXT,
     result TEXT,
+    fielderPosition TEXT DEFAULT '',
     runs INTEGER DEFAULT 0,
     outs INTEGER DEFAULT 0,
     balls INTEGER DEFAULT 0,
@@ -296,6 +300,7 @@ function runOptionalMigration(sql) {
 runOptionalMigration("ALTER TABLE game_events ADD COLUMN baseState TEXT DEFAULT '{}'");
 runOptionalMigration('ALTER TABLE game_events ADD COLUMN balls INTEGER DEFAULT 0');
 runOptionalMigration('ALTER TABLE game_events ADD COLUMN strikes INTEGER DEFAULT 0');
+runOptionalMigration("ALTER TABLE game_events ADD COLUMN fielderPosition TEXT DEFAULT ''");
 
 function seedDatabase() {
   const insertTeam = db.prepare('INSERT OR IGNORE INTO teams (id, name, shortName, city, league, stadium) VALUES (?, ?, ?, ?, ?, ?)');
@@ -541,6 +546,7 @@ function serializeGameEvent(event) {
     ...event,
     inning: Number(event.inning || 1),
     sequence: Number(event.sequence || 0),
+    fielderPosition: String(event.fielderPosition || ''),
     runs: Number(event.runs || 0),
     outs: Number(event.outs || 0),
     balls: Number(event.balls || 0),
@@ -655,6 +661,24 @@ function advanceForcedWalk(currentBases, batterId) {
   return { bases, runs };
 }
 
+function advanceDoublePlay(currentBases) {
+  const bases = { ...EMPTY_BASES };
+  let runs = 0;
+
+  if (currentBases.first) {
+    if (currentBases.third) runs += 1;
+    if (currentBases.second) bases.third = currentBases.second;
+    return { bases, runs };
+  }
+
+  if (currentBases.third) {
+    if (currentBases.second) bases.second = currentBases.second;
+    return { bases, runs };
+  }
+
+  return { bases, runs };
+}
+
 function getAutomaticPlayAction(result, currentBases, batterId) {
   if (!batterId) return undefined;
   if (result === 'SINGLE') return advanceHitBases(currentBases, batterId, 1);
@@ -665,11 +689,18 @@ function getAutomaticPlayAction(result, currentBases, batterId) {
     return advanceForcedWalk(currentBases, batterId);
   }
   if (result === 'SACRIFICE') return advanceHitBases(currentBases, '', 1);
-  if (result === 'DOUBLE_PLAY') return { bases: { ...EMPTY_BASES }, runs: 0 };
+  if (result === 'DOUBLE_PLAY') return advanceDoublePlay(currentBases);
   return undefined;
 }
 
 function getAutomaticRunnerAction(result, currentBases) {
+  if (result === 'PICKOFF') {
+    const bases = { ...currentBases };
+    const leadRunnerBase = ['third', 'second', 'first'].find((base) => bases[base]);
+    if (!leadRunnerBase) return undefined;
+    bases[leadRunnerBase] = '';
+    return { bases, runs: 0 };
+  }
   if (!['WILD_PITCH', 'BALK', 'STOLEN_BASE'].includes(result)) return undefined;
   return advanceHitBases(currentBases, '', 1);
 }
@@ -929,7 +960,9 @@ function validateGameEventInput(game, body) {
       : ['STRIKEOUT', 'GROUNDOUT', 'FLYOUT', 'SACRIFICE'].includes(result)
         ? 1
         : outs
-    : outs;
+    : eventType === 'RUNNER_ADVANCEMENT' && result === 'PICKOFF'
+      ? 1
+      : outs;
   const resultOuts = completedByStrikeThree ? 1 : hasManualOuts ? outs : defaultOuts;
   if (result === 'DROPPED_THIRD_STRIKE' && !canReachOnDroppedThirdStrike(context)) {
     return { error: '不死三振只有一壘空著，或兩出局時才可讓打者上壘' };
@@ -955,6 +988,21 @@ function validateGameEventInput(game, body) {
   if (body.pitcherId && !getPlayer(body.pitcherId)) {
     return { error: `無效的投手 ID: ${body.pitcherId}` };
   }
+  const runnersBefore = Object.values(context.bases || {}).filter(Boolean);
+  if (eventType === 'RUNNER_ADVANCEMENT' && runnersBefore.length === 0) {
+    return { error: '壘上事件必須有壘上跑者' };
+  }
+  if (eventType === 'PLATE_APPEARANCE' && RUNNER_REQUIRED_RESULTS.has(result) && runnersBefore.length === 0) {
+    return { error: '此打擊結果必須有壘上跑者' };
+  }
+  const requiresFielderPosition = eventType === 'PLATE_APPEARANCE' && FIELDING_RESULTS.has(result);
+  const fielderPosition = requiresFielderPosition ? String(body.fielderPosition || '').trim() : '';
+  if (requiresFielderPosition && !fielderPosition) {
+    return { error: '守備位置必填' };
+  }
+  if (requiresFielderPosition && !FIELDER_POSITIONS.has(fielderPosition)) {
+    return { error: `守備位置必須是以下之一: ${Array.from(FIELDER_POSITIONS).join(', ')}` };
+  }
 
   const teams = getTeamIdsForHalf(game, half);
   const offenseTeamId = body.offenseTeamId || teams.offenseTeamId;
@@ -974,6 +1022,15 @@ function validateGameEventInput(game, body) {
 
   const baseState = validateBaseStateInput(baseInput, offenseTeamId, context.bases);
   if (baseState.error) return { error: baseState.error };
+  if (eventType === 'RUNNER_ADVANCEMENT' && result === 'PICKOFF') {
+    if (resultOuts <= 0) {
+      return { error: '牽制出局必須新增出局' };
+    }
+    const runnersAfter = new Set(Object.values(baseState.value || {}).filter(Boolean));
+    if (!runnersBefore.some((runnerId) => !runnersAfter.has(runnerId))) {
+      return { error: '牽制出局必須移除壘上跑者' };
+    }
+  }
   const bases = context.outsInHalf + resultOuts >= 3 ? { ...EMPTY_BASES } : baseState.value;
   const runs = parseInteger(body.runs, !hasManualRuns && automaticPlayAction ? automaticPlayAction.runs : 0);
   const rbi = parseInteger(body.rbi, runs);
@@ -995,6 +1052,7 @@ function validateGameEventInput(game, body) {
       batterId,
       pitcherId,
       result: ['PLATE_APPEARANCE', 'RUNNER_ADVANCEMENT'].includes(eventType) ? result : '',
+      fielderPosition,
       runs,
       outs: resultOuts,
       balls,
@@ -1220,8 +1278,8 @@ app.post('/api/games/:id/events', (req, res) => {
   db.prepare(`
     INSERT INTO game_events (
       id, gameId, sequence, inning, half, eventType, offenseTeamId, defenseTeamId,
-      batterId, pitcherId, result, runs, outs, balls, strikes, rbi, baseState, notes, createdAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      batterId, pitcherId, result, fielderPosition, runs, outs, balls, strikes, rbi, baseState, notes, createdAt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     event.id,
     event.gameId,
@@ -1234,6 +1292,7 @@ app.post('/api/games/:id/events', (req, res) => {
     event.batterId,
     event.pitcherId,
     event.result,
+    event.fielderPosition,
     event.runs,
     event.outs,
     event.balls,

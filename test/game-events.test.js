@@ -52,7 +52,7 @@ test('config exposes event and tournament enums used by the UI', async () => {
 
 test('keeps overview as the leftmost tab while scorekeeper remains the default workspace', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
-  const scorekeeperNav = html.indexOf('data-target="scorekeeperPage">逐球紀錄');
+  const scorekeeperNav = html.indexOf('data-target="scorekeeperPage">紀錄');
   const overviewNav = html.indexOf('data-target="overviewPage">總覽');
   const scorekeeperPage = html.indexOf('<section id="scorekeeperPage" class="page active">');
   const gamesPage = html.indexOf('<section id="gamesPage" class="page">');
@@ -68,9 +68,17 @@ test('keeps overview as the leftmost tab while scorekeeper remains the default w
   assert.ok(html.includes('aria-controls="lineupBody"'));
   assert.ok(html.includes('id="lineupBody"'));
   assert.ok(html.includes('id="traditionalScoreboard"'));
+  const lineupForm = html.indexOf('id="lineupForm"');
+  const traditionalScoreboard = html.indexOf('id="traditionalScoreboard"');
+  const eventForm = html.indexOf('id="eventForm"');
+  assert.ok(lineupForm > -1);
+  assert.ok(traditionalScoreboard > -1);
+  assert.ok(eventForm > -1);
+  assert.ok(lineupForm < traditionalScoreboard);
+  assert.ok(traditionalScoreboard < eventForm);
   assert.ok(html.includes('id="fieldDiamond"'));
   assert.ok(html.includes('id="countPanel"'));
-  assert.ok(html.includes('id="scoreboardActionPanel"'));
+  assert.equal(html.includes('id="scoreboardActionPanel"'), false);
   assert.ok(html.includes('data-preview-base-indicator="first"'));
   assert.ok(html.includes('data-preview-out-light'));
   assert.equal(html.includes('id="baseStateBoard"'), false);
@@ -88,6 +96,17 @@ test('keeps overview as the leftmost tab while scorekeeper remains the default w
   assert.ok(html.includes('data-result-action="STRIKEOUT"'));
   assert.ok(html.includes('data-result-action="DROPPED_THIRD_STRIKE"'));
   assert.ok(html.includes('data-result-action="DOUBLE_PLAY"'));
+  assert.ok(html.includes('name="fielderPosition" type="hidden" value=""'));
+  assert.ok(html.includes('id="fielderPositionPanel"'));
+  assert.ok(html.includes('data-fielder-position="P"'));
+  assert.ok(html.includes('data-fielder-position="C"'));
+  assert.ok(html.includes('data-fielder-position="1B"'));
+  assert.ok(html.includes('data-fielder-position="2B"'));
+  assert.ok(html.includes('data-fielder-position="3B"'));
+  assert.ok(html.includes('data-fielder-position="SS"'));
+  assert.ok(html.includes('data-fielder-position="LF"'));
+  assert.ok(html.includes('data-fielder-position="CF"'));
+  assert.ok(html.includes('data-fielder-position="RF"'));
   assert.equal(html.includes('data-result-action="OTHER"'), false);
   assert.equal(html.includes('>其他</button>'), false);
   assert.equal(html.includes('id="runnerActionBoard"'), false);
@@ -97,13 +116,26 @@ test('keeps overview as the leftmost tab while scorekeeper remains the default w
   assert.ok(html.includes('data-home-score-target'));
   assert.ok(html.includes('data-out-drop-target'));
   assert.ok(html.includes('data-runner-chip'));
-  assert.ok(html.includes('id="playRunBadge"'));
-  assert.ok(html.includes('得分 +0'));
+  assert.equal(html.includes('id="playRunBadge"'), false);
+  assert.ok(html.includes('HOME 得分'));
+  assert.equal(html.includes('得分 +0'), false);
   assert.equal(html.includes('本 play'), false);
-  assert.ok(html.includes('data-runs-action="decrement"'));
-  assert.ok(html.includes('data-runs-action="increment"'));
-  assert.ok(html.includes('data-outs-action="decrement"'));
-  assert.ok(html.includes('data-outs-action="increment"'));
+  assert.equal(html.includes('data-runs-action="decrement"'), false);
+  assert.equal(html.includes('data-runs-action="increment"'), false);
+  assert.equal(html.includes('減少得分'), false);
+  assert.equal(html.includes('增加得分'), false);
+  assert.equal(html.includes('data-outs-action="decrement"'), false);
+  assert.equal(html.includes('data-outs-action="increment"'), false);
+  assert.equal(html.includes('減少出局數'), false);
+  assert.equal(html.includes('增加出局數'), false);
+  assert.ok(html.includes('data-count-kind="${kind}"'));
+  assert.ok(html.includes('data-count-value="${value}"'));
+  assert.ok(html.includes("countLights(2, Number(context.strikes || 0), 'strike')"));
+  assert.ok(html.includes("countLights(3, Number(context.balls || 0), 'ball')"));
+  assert.ok(html.includes("countLights(2, getAbsoluteOuts(), 'out')"));
+  assert.ok(html.includes('aria-label="設定'));
+  assert.ok(html.includes('function setPitchCount'));
+  assert.ok(html.includes('function handleCountLightClick'));
   assert.ok(html.includes('ui.countPanel.addEventListener'));
   assert.equal(html.includes('ui.scoreboardActionPanel.addEventListener'), false);
   assert.equal(html.includes('id="outAdjustmentBoard"'), false);
@@ -114,6 +146,37 @@ test('keeps overview as the leftmost tab while scorekeeper remains the default w
   assert.ok(html.includes('name="result" type="hidden" value=""'));
   assert.ok(html.includes('name="runs" type="hidden"'));
   assert.ok(html.includes('name="outs" type="hidden"'));
+  assert.ok(html.includes('class="play-event-panel"'));
+  assert.ok(html.includes('class="pitch-panel"'));
+  assert.ok(html.includes('class="event-submit tiny-btn"'));
+  assert.ok(html.includes('class="event-submit-bar"'));
+  assert.equal(html.includes('class="event-notes"'), false);
+  assert.equal(html.includes('placeholder="事件註記"'), false);
+  assert.equal(html.includes('name="notes"'), false);
+  assert.equal(html.includes('event-submit-row'), false);
+  const playEventPanel = html.indexOf('class="play-event-panel"');
+  const resultActions = html.indexOf('class="result-actions"');
+  const runnerActions = html.indexOf('class="runner-event-actions"');
+  const eventSubmit = html.indexOf('class="event-submit tiny-btn"');
+  const pitchPanel = html.indexOf('class="pitch-panel"');
+  assert.ok(playEventPanel > -1);
+  assert.ok(resultActions > -1);
+  assert.ok(runnerActions > -1);
+  assert.ok(eventSubmit > -1);
+  assert.ok(pitchPanel > -1);
+  assert.ok(eventForm < pitchPanel);
+  assert.ok(pitchPanel < playEventPanel);
+  assert.ok(playEventPanel < eventSubmit);
+  assert.ok(eventSubmit < runnerActions);
+  assert.ok(runnerActions < resultActions);
+  const strikeLabel = html.indexOf('<span class="count-label">S</span>');
+  const ballLabel = html.indexOf('<span class="count-label">B</span>');
+  const outLabel = html.indexOf('<span class="count-label">O</span>');
+  assert.ok(strikeLabel > -1);
+  assert.ok(ballLabel > -1);
+  assert.ok(outLabel > -1);
+  assert.ok(strikeLabel < ballLabel);
+  assert.ok(ballLabel < outLabel);
   assert.equal(html.includes('select name="result"'), false);
   assert.equal(html.includes('select name="eventType"'), false);
   assert.equal(html.includes('type="number" min="0" max="4" value="0" placeholder="得分"'), false);
@@ -134,6 +197,7 @@ test('shows rule-driven play actions for hits and walks in the UI', () => {
 
   assert.ok(html.includes('function getAutomaticPlayAction'));
   assert.ok(html.includes('function applyDefaultPlaySelection'));
+  assert.ok(html.includes('function resetPendingPlaySelection'));
   assert.ok(html.includes('function setReadyPlayState'));
   assert.ok(html.includes('function renderScoreboardPreview'));
   assert.ok(html.includes("result === 'SINGLE'"));
@@ -141,21 +205,37 @@ test('shows rule-driven play actions for hits and walks in the UI', () => {
   assert.ok(html.includes('data-ready-action'));
   assert.equal(html.includes('確認一壘安打'), false);
   assert.equal(html.includes('套用建議跑壘'), false);
-  assert.ok(html.includes('scorebug-controls'));
+  assert.ok(html.includes('play-event-panel'));
+  assert.ok(html.includes('pitch-panel'));
   assert.ok(html.includes('function renderInteractiveDiamond'));
   assert.ok(html.includes('function moveRunnerToDestination'));
   assert.ok(html.includes('function tryPushRunnerOneBase'));
-  assert.ok(html.includes('function adjustPlayRuns'));
-  assert.ok(html.includes('function renderRunControls'));
+  assert.equal(html.includes('function adjustPlayRuns'), false);
+  assert.equal(html.includes('function renderRunControls'), false);
   assert.ok(html.includes('function applyRunnerDestinations'));
+  assert.ok(html.includes('function requiresFielderPosition'));
+  assert.ok(html.includes('function renderFielderPositionButtons'));
+  assert.ok(html.includes('function clearFielderPosition'));
+  assert.ok(html.includes('payload.fielderPosition = form.fielderPosition.value'));
+  assert.ok(html.includes('守備 ${getFielderPositionLabel(event.fielderPosition)}'));
+  assert.ok(html.includes('function hasOccupiedBase'));
+  assert.ok(html.includes('function updateRunnerEventActionButtons'));
+  assert.ok(html.includes('function requiresOccupiedBaseForResult'));
+  assert.ok(html.includes('function updateResultActionAvailability'));
+  assert.ok(html.includes('button.disabled = requiresOccupiedBaseForResult(button.dataset.resultAction) && !hasOccupiedBase()'));
+  assert.ok(html.includes('button.disabled = !hasOccupiedBase()'));
   assert.ok(html.includes('function startRunnerPointerDrag'));
   assert.ok(html.includes('function moveRunnerPointerDrag'));
   assert.ok(html.includes('function finishRunnerPointerDrag'));
+  assert.ok(html.includes('function selectLeadRunnerForCorrection'));
+  assert.ok(html.includes("const sourceToSelect = ['third', 'second', 'first']"));
   assert.ok(html.includes("ui.fieldDiamond.addEventListener('pointerdown'"));
   assert.ok(html.includes("ui.fieldDiamond.addEventListener('pointermove'"));
   assert.ok(html.includes("ui.fieldDiamond.addEventListener('pointerup'"));
   assert.ok(html.includes('document.elementFromPoint(event.clientX, event.clientY)'));
   assert.ok(html.includes('touch-action: none'));
+  assert.ok(html.includes('base-label'));
+  assert.ok(html.includes('has-selected-runner'));
   assert.ok(html.includes('draggable="true"'));
   assert.ok(html.includes("sourceKey === 'batter'"));
   assert.ok(html.includes("target === 'home'"));
@@ -164,12 +244,20 @@ test('shows rule-driven play actions for hits and walks in the UI', () => {
   assert.ok(html.includes('data-runner-event-action="WILD_PITCH"'));
   assert.ok(html.includes('data-runner-event-action="BALK"'));
   assert.ok(html.includes('data-runner-event-action="STOLEN_BASE"'));
+  assert.ok(html.includes('data-runner-event-action="PICKOFF"'));
   assert.ok(html.includes('壘上事件'));
+  assert.ok(html.includes('不需送出'));
+  assert.ok(html.includes('data-result-action="ERROR">失誤</button>'));
+  assert.equal(html.includes('失誤上壘'), false);
   assert.ok(html.includes('async function submitCurrentPlay'));
-  assert.ok(html.includes('const hasManualRunnerEdit = state.baseStateTouched'));
-  assert.ok(html.includes("const requiresManualRunnerSubmit = ['WILD_PITCH', 'STOLEN_BASE'].includes(runnerEventAction)"));
+  assert.ok(html.includes('requiresFielderPosition(form.result.value) && !form.fielderPosition.value'));
+  assert.ok(html.includes('const isSwitchingPendingPlay'));
+  assert.ok(html.includes('resetPendingPlaySelection();'));
+  assert.ok(html.includes('const hasManualRunnerEdit = state.baseStateTouched && !isSwitchingPendingPlay'));
+  assert.ok(html.includes("const requiresManualRunnerSubmit = ['WILD_PITCH', 'STOLEN_BASE', 'PICKOFF'].includes(runnerEventAction)"));
   assert.match(html, /if \(runnerEventAction\)[\s\S]+if \(!hasManualRunnerEdit\)[\s\S]+applyDefaultPlaySelection\(\)/);
   assert.match(html, /if \(runnerEventAction\)[\s\S]+if \(requiresManualRunnerSubmit\)[\s\S]+return;/);
+  assert.match(html, /if \(requiresManualRunnerSubmit\)[\s\S]+selectLeadRunnerForCorrection\(\)[\s\S]+updatePlaySubmitState\(\)/);
   assert.match(html, /if \(runnerEventAction\)[\s\S]+await submitCurrentPlay\(\)/);
   assert.ok(html.includes('includeBatter'));
   assert.ok(html.includes('function setAbsoluteOuts'));
@@ -195,7 +283,7 @@ test('only exposes one-step undo for the latest play in the UI', () => {
 test('keeps player stats read-only and derived from play events in the UI', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
 
-  assert.ok(html.includes('成績會由逐球紀錄自動累加，不在球員資料手動輸入。'));
+  assert.ok(html.includes('成績會由紀錄自動累加，不在球員資料手動輸入。'));
   assert.equal(html.includes('name="battingAverage"'), false);
   assert.equal(html.includes('name="ops"'), false);
   assert.equal(html.includes('name="hr"'), false);
@@ -261,6 +349,7 @@ test('seeds a ready-to-score demo game with complete lineups', async () => {
       outs: 1,
       runs: 0,
       bases: { first: '', second: '', third: '' },
+      fielderPosition: 'SS',
     },
   });
 
@@ -349,6 +438,7 @@ test('auto-fills inning, half, batter, pitcher, and base state from the lineup',
       runs: 0,
       outs: 3,
       bases: { first: '', second: '', third: '' },
+      fielderPosition: 'P',
     },
   });
 
@@ -699,6 +789,143 @@ test('records manual stolen-base runner movement and can undo it', async () => {
   assert.deepEqual(undo.body.context.bases, { first: 'p12', second: 'p03', third: '' });
 });
 
+test('records pickoffs as runner events without changing batter or count', async () => {
+  const game = await request('/api/games', {
+    method: 'POST',
+    body: {
+      tournamentId: 'cup01',
+      homeTeamId: 't01',
+      awayTeamId: 't02',
+      date: '2026-09-16',
+      venue: '牽制出局測試球場',
+      status: 'live',
+    },
+  });
+
+  await request(`/api/games/${game.body.id}/lineups`, {
+    method: 'PUT',
+    body: {
+      lineups: [
+        { teamId: 't02', battingOrder: ['p03', 'p12', 'p13'] },
+        { teamId: 't01', battingOrder: ['p01', 'p02', 'p05'] },
+      ],
+    },
+  });
+
+  const firstSingle = await request(`/api/games/${game.body.id}/events`, {
+    method: 'POST',
+    body: { eventType: 'PLATE_APPEARANCE', result: 'SINGLE' },
+  });
+  await request(`/api/games/${game.body.id}/events`, {
+    method: 'POST',
+    body: { eventType: 'PITCH', balls: 2, strikes: 1 },
+  });
+
+  const defaultPickoff = await request(`/api/games/${game.body.id}/events`, {
+    method: 'POST',
+    body: { eventType: 'RUNNER_ADVANCEMENT', result: 'PICKOFF' },
+  });
+
+  assert.equal(defaultPickoff.status, 201);
+  assert.equal(defaultPickoff.body.event.result, 'PICKOFF');
+  assert.equal(defaultPickoff.body.event.outs, 1);
+  assert.equal(defaultPickoff.body.context.outsInHalf, 1);
+  assert.equal(defaultPickoff.body.context.batterId, 'p12');
+  assert.equal(defaultPickoff.body.context.balls, 2);
+  assert.equal(defaultPickoff.body.context.strikes, 1);
+  assert.deepEqual(defaultPickoff.body.context.bases, { first: '', second: '', third: '' });
+
+  const undo = await request(`/api/games/${game.body.id}/events/${defaultPickoff.body.event.id}`, {
+    method: 'DELETE',
+  });
+
+  assert.equal(undo.status, 200);
+  assert.equal(undo.body.events.some((event) => event.id === firstSingle.body.event.id), true);
+  assert.equal(undo.body.context.batterId, 'p12');
+  assert.equal(undo.body.context.balls, 2);
+  assert.equal(undo.body.context.strikes, 1);
+  assert.deepEqual(undo.body.context.bases, { first: 'p03', second: '', third: '' });
+
+  const manualPickoff = await request(`/api/games/${game.body.id}/events`, {
+    method: 'POST',
+    body: {
+      eventType: 'RUNNER_ADVANCEMENT',
+      result: 'PICKOFF',
+      outs: 1,
+      bases: { first: '', second: '', third: '' },
+    },
+  });
+
+  assert.equal(manualPickoff.status, 201);
+  assert.equal(manualPickoff.body.event.outs, 1);
+  assert.deepEqual(manualPickoff.body.context.bases, { first: '', second: '', third: '' });
+});
+
+test('rejects invalid pickoff runner events', async () => {
+  const game = await request('/api/games', {
+    method: 'POST',
+    body: {
+      tournamentId: 'cup01',
+      homeTeamId: 't01',
+      awayTeamId: 't02',
+      date: '2026-09-17',
+      venue: '牽制防呆測試球場',
+      status: 'live',
+    },
+  });
+
+  await request(`/api/games/${game.body.id}/lineups`, {
+    method: 'PUT',
+    body: {
+      lineups: [
+        { teamId: 't02', battingOrder: ['p03', 'p12', 'p13'] },
+        { teamId: 't01', battingOrder: ['p01', 'p02', 'p05'] },
+      ],
+    },
+  });
+
+  for (const result of ['WILD_PITCH', 'BALK', 'STOLEN_BASE', 'PICKOFF']) {
+    const noRunner = await request(`/api/games/${game.body.id}/events`, {
+      method: 'POST',
+      body: { eventType: 'RUNNER_ADVANCEMENT', result },
+    });
+
+    assert.equal(noRunner.status, 400);
+    assert.match(noRunner.body.error, /壘上跑者/);
+  }
+
+  await request(`/api/games/${game.body.id}/events`, {
+    method: 'POST',
+    body: { eventType: 'PLATE_APPEARANCE', result: 'SINGLE' },
+  });
+
+  const noOut = await request(`/api/games/${game.body.id}/events`, {
+    method: 'POST',
+    body: {
+      eventType: 'RUNNER_ADVANCEMENT',
+      result: 'PICKOFF',
+      outs: 0,
+      bases: { first: '', second: '', third: '' },
+    },
+  });
+
+  assert.equal(noOut.status, 400);
+  assert.match(noOut.body.error, /新增出局/);
+
+  const noRemovedRunner = await request(`/api/games/${game.body.id}/events`, {
+    method: 'POST',
+    body: {
+      eventType: 'RUNNER_ADVANCEMENT',
+      result: 'PICKOFF',
+      outs: 1,
+      bases: { first: 'p03', second: '', third: '' },
+    },
+  });
+
+  assert.equal(noRemovedRunner.status, 400);
+  assert.match(noRemovedRunner.body.error, /壘上跑者/);
+});
+
 test('supports double plays and manual outs on fielder choices', async () => {
   const game = await request('/api/games', {
     method: 'POST',
@@ -777,6 +1004,145 @@ test('supports double plays and manual outs on fielder choices', async () => {
   assert.equal(doublePlay.body.event.result, 'DOUBLE_PLAY');
   assert.equal(doublePlay.body.event.outs, 2);
   assert.equal(doublePlay.body.context.outsInHalf, 2);
+});
+
+test('advances lead runners on default double plays with multiple runners forced', async () => {
+  const twoOnGame = await request('/api/games', {
+    method: 'POST',
+    body: {
+      tournamentId: 'cup01',
+      homeTeamId: 't01',
+      awayTeamId: 't02',
+      date: '2026-09-20',
+      venue: '一二壘雙殺測試球場',
+      status: 'live',
+    },
+  });
+
+  await request(`/api/games/${twoOnGame.body.id}/lineups`, {
+    method: 'PUT',
+    body: {
+      lineups: [
+        { teamId: 't02', battingOrder: ['p03', 'p12', 'p13', 'p14'] },
+        { teamId: 't01', battingOrder: ['p01', 'p02', 'p05', 'p06'] },
+      ],
+    },
+  });
+
+  await request(`/api/games/${twoOnGame.body.id}/events`, {
+    method: 'POST',
+    body: { eventType: 'PLATE_APPEARANCE', result: 'SINGLE' },
+  });
+  await request(`/api/games/${twoOnGame.body.id}/events`, {
+    method: 'POST',
+    body: { eventType: 'PLATE_APPEARANCE', result: 'SINGLE' },
+  });
+
+  const twoOnDoublePlay = await request(`/api/games/${twoOnGame.body.id}/events`, {
+    method: 'POST',
+    body: { eventType: 'PLATE_APPEARANCE', result: 'DOUBLE_PLAY' },
+  });
+
+  assert.equal(twoOnDoublePlay.status, 201);
+  assert.equal(twoOnDoublePlay.body.event.outs, 2);
+  assert.equal(twoOnDoublePlay.body.event.runs, 0);
+  assert.deepEqual(twoOnDoublePlay.body.context.bases, { first: '', second: '', third: 'p03' });
+
+  const fullBasesGame = await request('/api/games', {
+    method: 'POST',
+    body: {
+      tournamentId: 'cup01',
+      homeTeamId: 't01',
+      awayTeamId: 't02',
+      date: '2026-09-21',
+      venue: '滿壘雙殺測試球場',
+      status: 'live',
+    },
+  });
+
+  await request(`/api/games/${fullBasesGame.body.id}/lineups`, {
+    method: 'PUT',
+    body: {
+      lineups: [
+        { teamId: 't02', battingOrder: ['p03', 'p12', 'p13', 'p14'] },
+        { teamId: 't01', battingOrder: ['p01', 'p02', 'p05', 'p06'] },
+      ],
+    },
+  });
+
+  await request(`/api/games/${fullBasesGame.body.id}/events`, {
+    method: 'POST',
+    body: { eventType: 'PLATE_APPEARANCE', result: 'SINGLE' },
+  });
+  await request(`/api/games/${fullBasesGame.body.id}/events`, {
+    method: 'POST',
+    body: { eventType: 'PLATE_APPEARANCE', result: 'SINGLE' },
+  });
+  await request(`/api/games/${fullBasesGame.body.id}/events`, {
+    method: 'POST',
+    body: { eventType: 'PLATE_APPEARANCE', result: 'SINGLE' },
+  });
+
+  const fullBasesDoublePlay = await request(`/api/games/${fullBasesGame.body.id}/events`, {
+    method: 'POST',
+    body: { eventType: 'PLATE_APPEARANCE', result: 'DOUBLE_PLAY' },
+  });
+
+  assert.equal(fullBasesDoublePlay.status, 201);
+  assert.equal(fullBasesDoublePlay.body.event.outs, 2);
+  assert.equal(fullBasesDoublePlay.body.event.runs, 1);
+  assert.deepEqual(fullBasesDoublePlay.body.context.bases, { first: '', second: '', third: 'p12' });
+  assert.equal(fullBasesDoublePlay.body.summary.awayRuns, 1);
+});
+
+test('requires runners on base for double plays, fielder choices, and sacrifices', async () => {
+  const game = await request('/api/games', {
+    method: 'POST',
+    body: {
+      tournamentId: 'cup01',
+      homeTeamId: 't01',
+      awayTeamId: 't02',
+      date: '2026-09-18',
+      venue: '雙殺野選防呆測試球場',
+      status: 'live',
+    },
+  });
+
+  await request(`/api/games/${game.body.id}/lineups`, {
+    method: 'PUT',
+    body: {
+      lineups: [
+        { teamId: 't02', battingOrder: ['p03', 'p12', 'p13'] },
+        { teamId: 't01', battingOrder: ['p01', 'p02', 'p05'] },
+      ],
+    },
+  });
+
+  for (const result of ['DOUBLE_PLAY', 'FIELDERS_CHOICE', 'SACRIFICE']) {
+    const response = await request(`/api/games/${game.body.id}/events`, {
+      method: 'POST',
+      body: {
+        eventType: 'PLATE_APPEARANCE',
+        result,
+      },
+    });
+
+    assert.equal(response.status, 400);
+    assert.match(response.body.error, /壘上跑者/);
+  }
+
+  await request(`/api/games/${game.body.id}/events`, {
+    method: 'POST',
+    body: { eventType: 'PLATE_APPEARANCE', result: 'SINGLE' },
+  });
+
+  const fielderChoice = await request(`/api/games/${game.body.id}/events`, {
+    method: 'POST',
+    body: { eventType: 'PLATE_APPEARANCE', result: 'FIELDERS_CHOICE' },
+  });
+
+  assert.equal(fielderChoice.status, 201);
+  assert.equal(fielderChoice.body.event.result, 'FIELDERS_CHOICE');
 });
 
 test('forces runners on dropped third strikes, errors, and fielder choices', async () => {
@@ -1188,6 +1554,92 @@ test('rejects invalid game event input at the API boundary', async () => {
 
   assert.equal(response.status, 400);
   assert.match(response.body.error, /局數/);
+});
+
+test('requires structured fielder positions for groundouts and flyouts', async () => {
+  const game = await request('/api/games', {
+    method: 'POST',
+    body: {
+      tournamentId: 'cup01',
+      homeTeamId: 't01',
+      awayTeamId: 't02',
+      date: '2026-09-15',
+      venue: '守備位置測試球場',
+      status: 'live',
+    },
+  });
+
+  await request(`/api/games/${game.body.id}/lineups`, {
+    method: 'PUT',
+    body: {
+      lineups: [
+        { teamId: 't02', battingOrder: ['p03', 'p12', 'p13'] },
+        { teamId: 't01', battingOrder: ['p01', 'p02', 'p05'] },
+      ],
+    },
+  });
+
+  const missingGroundoutFielder = await request(`/api/games/${game.body.id}/events`, {
+    method: 'POST',
+    body: {
+      eventType: 'PLATE_APPEARANCE',
+      result: 'GROUNDOUT',
+    },
+  });
+
+  assert.equal(missingGroundoutFielder.status, 400);
+  assert.match(missingGroundoutFielder.body.error, /守備位置/);
+
+  const invalidFlyoutFielder = await request(`/api/games/${game.body.id}/events`, {
+    method: 'POST',
+    body: {
+      eventType: 'PLATE_APPEARANCE',
+      result: 'FLYOUT',
+      fielderPosition: 'OF',
+    },
+  });
+
+  assert.equal(invalidFlyoutFielder.status, 400);
+  assert.match(invalidFlyoutFielder.body.error, /守備位置/);
+
+  const groundout = await request(`/api/games/${game.body.id}/events`, {
+    method: 'POST',
+    body: {
+      eventType: 'PLATE_APPEARANCE',
+      result: 'GROUNDOUT',
+      fielderPosition: 'SS',
+    },
+  });
+
+  assert.equal(groundout.status, 201);
+  assert.equal(groundout.body.event.fielderPosition, 'SS');
+  assert.equal(groundout.body.events.at(-1).fielderPosition, 'SS');
+
+  const flyout = await request(`/api/games/${game.body.id}/events`, {
+    method: 'POST',
+    body: {
+      eventType: 'PLATE_APPEARANCE',
+      result: 'FLYOUT',
+      fielderPosition: 'CF',
+    },
+  });
+
+  assert.equal(flyout.status, 201);
+  assert.equal(flyout.body.event.fielderPosition, 'CF');
+  assert.equal(flyout.body.events.at(-1).fielderPosition, 'CF');
+
+  const single = await request(`/api/games/${game.body.id}/events`, {
+    method: 'POST',
+    body: {
+      eventType: 'PLATE_APPEARANCE',
+      result: 'SINGLE',
+      fielderPosition: 'P',
+    },
+  });
+
+  assert.equal(single.status, 201);
+  assert.equal(single.body.event.fielderPosition, '');
+  assert.equal(single.body.events.at(-1).fielderPosition, '');
 });
 
 test('only rolls back the latest game event one step at a time', async () => {
