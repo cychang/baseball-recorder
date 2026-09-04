@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.example.baseball-recorder-tunnel</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>&lt;CLOUDFLARED_BINARY&gt;</string>
+    <string>tunnel</string>
+    <string>--config</string>
+    <string>&lt;ABSOLUTE_PATH_TO_CLOUDFLARED_CONFIG_YML&gt;</string>
+    <string>run</string>
+    <string>baseball-recorder</string>
+  </array>
+
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>&lt;PROJECT_DIR&gt;/logs/cloudflared.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>&lt;PROJECT_DIR&gt;/logs/cloudflared.err.log</string>
+</dict>
+</plist>

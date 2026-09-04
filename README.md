@@ -20,11 +20,17 @@
 ## 啟動方式
 
 1. 安裝依賴：
+   ```bash
    npm install
+   ```
 2. 啟動伺服器：
+   ```bash
    npm start
+   ```
 3. 打開瀏覽器：
+   ```text
    http://localhost:3000
+   ```
 
 ## 測試方式
 
@@ -41,6 +47,9 @@ npm test
 - server.js：後端 API 與 SQLite 資料邏輯
 - public/：前端頁面
 - data/baseball.db：本地 SQLite 資料庫
+- DEPLOY.md：本機 hosting、Cloudflare Tunnel、保活與備份筆記
+- deploy/：cloudflared、PM2、launchd 設定範本
+- scripts/backup-sqlite.sh：SQLite 備份腳本
 
 ## 目前定位
 
@@ -62,3 +71,7 @@ npm test
 2. 加入壘包拖拉、undo 與 pitch count 流程
 3. 從事件衍生球員 box score 與球季統計
 4. 新增只讀分享頁，讓觀眾追蹤即時比分
+
+## Hosting
+
+若沒有固定 IP，建議先用本機 Node app 搭配 Cloudflare Tunnel，SQLite 照舊放本機並定期備份。詳細步驟見 `DEPLOY.md`。

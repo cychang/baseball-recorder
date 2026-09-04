@@ -3,6 +3,12 @@ node_modules/
 !.gitignore
 !.gitkeep
 .DS_Store
+backups/
+logs/
+.cloudflared/
+deploy/cloudflared/*.json
+*.pem
+*.key
 
 # keep the local database file tracked
 !data/

@@ -1,0 +1,7 @@
+tunnel: <TUNNEL_ID>
+credentials-file: <ABSOLUTE_PATH_TO_TUNNEL_CREDENTIALS_JSON>
+
+ingress:
+  - hostname: score.example.com
+    service: http://127.0.0.1:3000
+  - service: http_status:404

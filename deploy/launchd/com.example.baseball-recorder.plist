@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.example.baseball-recorder</string>
+
+  <key>WorkingDirectory</key>
+  <string>&lt;PROJECT_DIR&gt;</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>&lt;NODE_BINARY&gt;</string>
+    <string>server.js</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>NODE_ENV</key>
+    <string>production</string>
+    <key>PORT</key>
+    <string>3000</string>
+    <key>BASEBALL_DB_PATH</key>
+    <string>&lt;PROJECT_DIR&gt;/data/baseball.db</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>&lt;PROJECT_DIR&gt;/logs/baseball-recorder.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>&lt;PROJECT_DIR&gt;/logs/baseball-recorder.err.log</string>
+</dict>
+</plist>
