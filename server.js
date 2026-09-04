@@ -130,10 +130,10 @@ const defaultDatabase = {
     { id: 'cup02', name: '2026 台灣國際邀請賽', season: '2026' },
   ],
   games: [
-    { id: 'g01', tournamentId: 'cup01', homeTeamId: 't01', awayTeamId: 't02', date: '2026-04-10', venue: '台北體育場', score: '7-4', winnerTeamId: 't01', status: 'completed' },
-    { id: 'g02', tournamentId: 'cup01', homeTeamId: 't03', awayTeamId: 't01', date: '2026-04-12', venue: '高雄體育場', score: '5-2', winnerTeamId: 't03', status: 'completed' },
-    { id: 'g03', tournamentId: 'cup01', homeTeamId: 't02', awayTeamId: 't03', date: '2026-04-18', venue: '桃園球場', score: '9-3', winnerTeamId: 't02', status: 'completed' },
-    { id: 'g04', tournamentId: 'cup02', homeTeamId: 't01', awayTeamId: 't02', date: '2026-09-02', venue: '新莊棒球場', score: '0-0', winnerTeamId: '', status: 'live' },
+    { id: 'g01', tournamentId: 'cup01', homeTeamId: 't01', awayTeamId: 't02', date: '2026-04-10', time: '18:35', venue: '台北體育場', score: '7-4', winnerTeamId: 't01', status: 'completed' },
+    { id: 'g02', tournamentId: 'cup01', homeTeamId: 't03', awayTeamId: 't01', date: '2026-04-12', time: '14:05', venue: '高雄體育場', score: '5-2', winnerTeamId: 't03', status: 'completed' },
+    { id: 'g03', tournamentId: 'cup01', homeTeamId: 't02', awayTeamId: 't03', date: '2026-04-18', time: '17:05', venue: '桃園球場', score: '9-3', winnerTeamId: 't02', status: 'completed' },
+    { id: 'g04', tournamentId: 'cup02', homeTeamId: 't01', awayTeamId: 't02', date: '2026-09-02', time: '18:35', venue: '新莊棒球場', score: '0-0', winnerTeamId: '', status: 'live' },
   ],
   lineups: [
     {
@@ -165,6 +165,8 @@ const EMPTY_BASES = { first: '', second: '', third: '' };
 const FIELDING_RESULTS = new Set(['GROUNDOUT', 'FLYOUT']);
 const FIELDER_POSITIONS = new Set(['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF']);
 const RUNNER_REQUIRED_RESULTS = new Set(['DOUBLE_PLAY', 'FIELDERS_CHOICE', 'SACRIFICE']);
+const HIT_RESULTS = new Set(['SINGLE', 'DOUBLE', 'TRIPLE', 'HOME_RUN']);
+const BATTER_RETIRED_RESULTS = new Set(['STRIKEOUT', 'GROUNDOUT', 'FLYOUT', 'DOUBLE_PLAY', 'SACRIFICE']);
 const idCounters = new Map();
 const recordIdTables = new Set(['teams', 'players', 'tournaments', 'games']);
 
@@ -215,6 +217,15 @@ db.exec(`
     status TEXT
   );
 
+  CREATE TABLE IF NOT EXISTS player_teams (
+    playerId TEXT NOT NULL,
+    teamId TEXT NOT NULL,
+    createdAt TEXT NOT NULL,
+    PRIMARY KEY (playerId, teamId),
+    FOREIGN KEY (playerId) REFERENCES players(id),
+    FOREIGN KEY (teamId) REFERENCES teams(id)
+  );
+
   CREATE TABLE IF NOT EXISTS tournaments (
     id TEXT PRIMARY KEY,
     name TEXT,
@@ -231,6 +242,7 @@ db.exec(`
     homeTeamId TEXT,
     awayTeamId TEXT,
     date TEXT,
+    time TEXT DEFAULT '',
     venue TEXT,
     score TEXT,
     winnerTeamId TEXT,
@@ -286,6 +298,7 @@ db.exec(`
 
   CREATE UNIQUE INDEX IF NOT EXISTS idx_game_events_game_sequence ON game_events (gameId, sequence);
   CREATE INDEX IF NOT EXISTS idx_game_events_game_id ON game_events (gameId);
+  CREATE INDEX IF NOT EXISTS idx_player_teams_team_id ON player_teams (teamId);
   CREATE UNIQUE INDEX IF NOT EXISTS idx_game_lineups_game_team_order ON game_lineups (gameId, teamId, battingOrder);
   CREATE UNIQUE INDEX IF NOT EXISTS idx_game_lineups_game_team_player ON game_lineups (gameId, teamId, playerId);
 `);
@@ -301,12 +314,14 @@ runOptionalMigration("ALTER TABLE game_events ADD COLUMN baseState TEXT DEFAULT 
 runOptionalMigration('ALTER TABLE game_events ADD COLUMN balls INTEGER DEFAULT 0');
 runOptionalMigration('ALTER TABLE game_events ADD COLUMN strikes INTEGER DEFAULT 0');
 runOptionalMigration("ALTER TABLE game_events ADD COLUMN fielderPosition TEXT DEFAULT ''");
+runOptionalMigration("ALTER TABLE games ADD COLUMN time TEXT DEFAULT ''");
 
 function seedDatabase() {
   const insertTeam = db.prepare('INSERT OR IGNORE INTO teams (id, name, shortName, city, league, stadium) VALUES (?, ?, ?, ?, ?, ?)');
   const insertPlayer = db.prepare('INSERT OR IGNORE INTO players (id, name, teamId, position, jersey, battingAverage, ops, hr, rbi, sb, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+  const insertPlayerTeam = db.prepare('INSERT OR IGNORE INTO player_teams (playerId, teamId, createdAt) VALUES (?, ?, ?)');
   const insertTournament = db.prepare('INSERT OR IGNORE INTO tournaments (id, name, season, type, startDate, endDate, status) VALUES (?, ?, ?, ?, ?, ?, ?)');
-  const insertGame = db.prepare('INSERT OR IGNORE INTO games (id, tournamentId, homeTeamId, awayTeamId, date, venue, score, winnerTeamId, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+  const insertGame = db.prepare('INSERT OR IGNORE INTO games (id, tournamentId, homeTeamId, awayTeamId, date, time, venue, score, winnerTeamId, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
   const insertLineup = db.prepare('INSERT OR IGNORE INTO game_lineups (id, gameId, teamId, battingOrder, playerId, createdAt) VALUES (?, ?, ?, ?, ?, ?)');
   const insertLineupSetting = db.prepare('INSERT OR IGNORE INTO game_lineup_settings (gameId, teamId, startingPitcherId, updatedAt) VALUES (?, ?, ?, ?)');
 
@@ -329,6 +344,7 @@ function seedDatabase() {
         player.sb,
         player.status
       );
+      insertPlayerTeam.run(player.id, player.teamId, '2026-09-02T00:00:00.000Z');
     }
 
     for (const tournament of defaultDatabase.tournaments) {
@@ -350,6 +366,7 @@ function seedDatabase() {
         game.homeTeamId,
         game.awayTeamId,
         game.date,
+        game.time || '',
         game.venue,
         game.score,
         game.winnerTeamId,
@@ -374,6 +391,16 @@ function seedDatabase() {
     }
   });
 
+  tx();
+}
+
+function syncMissingPlayerTeamLinks() {
+  const now = new Date().toISOString();
+  const rows = db.prepare("SELECT id, teamId FROM players WHERE teamId IS NOT NULL AND teamId != ''").all();
+  const insert = db.prepare('INSERT OR IGNORE INTO player_teams (playerId, teamId, createdAt) VALUES (?, ?, ?)');
+  const tx = db.transaction(() => {
+    for (const row of rows) insert.run(row.id, row.teamId, now);
+  });
   tx();
 }
 
@@ -414,12 +441,40 @@ function serializeTeam(team) {
   };
 }
 
+function getPlayerTeams(playerId) {
+  const teams = db.prepare(`
+    SELECT teams.id, teams.name
+    FROM player_teams
+    JOIN teams ON teams.id = player_teams.teamId
+    WHERE player_teams.playerId = ?
+    ORDER BY player_teams.createdAt ASC, teams.id ASC
+  `).all(playerId);
+
+  if (teams.length > 0) return teams.map(serializeTeam);
+
+  const player = db.prepare('SELECT teamId FROM players WHERE id = ?').get(playerId);
+  const fallbackTeam = player?.teamId ? db.prepare('SELECT * FROM teams WHERE id = ?').get(player.teamId) : null;
+  return fallbackTeam ? [serializeTeam(fallbackTeam)] : [];
+}
+
+function getPlayerTeamIds(playerId) {
+  return getPlayerTeams(playerId).map((team) => team.id);
+}
+
+function playerBelongsToTeam(playerId, teamId) {
+  return getPlayerTeamIds(playerId).includes(teamId);
+}
+
 function serializePlayer(player) {
   const stats = derivePlayerStats(player.id);
+  const teams = getPlayerTeams(player.id);
+  const teamIds = teams.map((team) => team.id);
   return {
     id: player.id,
     name: player.name,
-    teamId: player.teamId,
+    teamId: teamIds[0] || player.teamId,
+    teamIds,
+    teams,
     jersey: player.jersey,
     ...stats,
     status: player.status,
@@ -430,12 +485,24 @@ function roundStat(value) {
   return Number(Number(value || 0).toFixed(3));
 }
 
+function formatInningsPitched(outs) {
+  const fullInnings = Math.floor(Number(outs || 0) / 3);
+  const partialOuts = Number(outs || 0) % 3;
+  return partialOuts > 0 ? `${fullInnings}.${partialOuts}` : String(fullInnings);
+}
+
 function derivePlayerStats(playerId) {
   const plateEvents = db.prepare(`
-    SELECT eventType, result, rbi
+    SELECT gameId, eventType, result, rbi, runs
     FROM game_events
     WHERE batterId = ? AND eventType = 'PLATE_APPEARANCE'
   `).all(playerId);
+  const pitchingEvents = db.prepare(`
+    SELECT gameId, eventType, result, runs, outs
+    FROM game_events
+    WHERE pitcherId = ?
+  `).all(playerId);
+  const lineupGames = db.prepare('SELECT DISTINCT gameId FROM game_lineups WHERE playerId = ?').all(playerId);
   const hitBases = {
     SINGLE: 1,
     DOUBLE: 2,
@@ -443,6 +510,7 @@ function derivePlayerStats(playerId) {
     HOME_RUN: 4,
   };
   const stats = {
+    gamesPlayed: 0,
     plateAppearances: 0,
     atBats: 0,
     hits: 0,
@@ -452,12 +520,31 @@ function derivePlayerStats(playerId) {
     walks: 0,
     hitByPitch: 0,
     sacrifices: 0,
+    strikeouts: 0,
     totalBases: 0,
     rbi: 0,
+    runsScored: 0,
     sb: 0,
+    pitchingWins: 0,
+    pitchingLosses: 0,
+    saves: 0,
+    pitchingGames: 0,
+    battersFaced: 0,
+    atBatsAgainst: 0,
+    pitchingOuts: 0,
+    hitsAllowed: 0,
+    doublesAllowed: 0,
+    triplesAllowed: 0,
+    homeRunsAllowed: 0,
+    runsAllowed: 0,
+    earnedRunsAllowed: 0,
+    walksAllowed: 0,
+    strikeoutsThrown: 0,
   };
 
+  const gamesPlayed = new Set(lineupGames.map((row) => row.gameId));
   for (const event of plateEvents) {
+    gamesPlayed.add(event.gameId);
     const result = event.result || '';
     stats.plateAppearances += 1;
     stats.rbi += Number(event.rbi || 0);
@@ -476,6 +563,7 @@ function derivePlayerStats(playerId) {
     }
 
     stats.atBats += 1;
+    if (['STRIKEOUT', 'DROPPED_THIRD_STRIKE'].includes(result)) stats.strikeouts += 1;
     if (hitBases[result]) {
       stats.hits += 1;
       stats.totalBases += hitBases[result];
@@ -486,7 +574,7 @@ function derivePlayerStats(playerId) {
   }
 
   const events = db.prepare(`
-    SELECT gameId, sequence, eventType, result, runs, baseState
+    SELECT gameId, sequence, eventType, batterId, result, runs, baseState
     FROM game_events
     ORDER BY gameId ASC, sequence ASC
   `).all();
@@ -503,7 +591,47 @@ function derivePlayerStats(playerId) {
         stats.sb += 1;
       }
     }
+    if (event.eventType === 'PLATE_APPEARANCE' && event.result === 'HOME_RUN' && event.batterId === playerId) {
+      stats.runsScored += 1;
+    }
+    const previousBase = Object.entries(previousBases).find(([, runnerId]) => runnerId === playerId)?.[0];
+    const nextBase = Object.entries(nextBases).find(([, runnerId]) => runnerId === playerId)?.[0];
+    if (previousBase && !nextBase && Number(event.runs || 0) > 0) {
+      stats.runsScored += 1;
+    }
     previousBasesByGame[event.gameId] = nextBases;
+  }
+
+  const pitchingGameIds = new Set();
+  for (const event of pitchingEvents) {
+    gamesPlayed.add(event.gameId);
+    pitchingGameIds.add(event.gameId);
+    stats.runsAllowed += Number(event.runs || 0);
+    stats.earnedRunsAllowed += Number(event.runs || 0);
+    stats.pitchingOuts += Number(event.outs || 0);
+    if (event.eventType !== 'PLATE_APPEARANCE') continue;
+    stats.battersFaced += 1;
+    if (HIT_RESULTS.has(event.result)) stats.hitsAllowed += 1;
+    if (event.result === 'DOUBLE') stats.doublesAllowed += 1;
+    if (event.result === 'TRIPLE') stats.triplesAllowed += 1;
+    if (event.result === 'HOME_RUN') stats.homeRunsAllowed += 1;
+    if (event.result === 'WALK') stats.walksAllowed += 1;
+    if (['STRIKEOUT', 'DROPPED_THIRD_STRIKE'].includes(event.result)) stats.strikeoutsThrown += 1;
+    if (!['WALK', 'HIT_BY_PITCH', 'SACRIFICE'].includes(event.result)) stats.atBatsAgainst += 1;
+  }
+  stats.pitchingGames = pitchingGameIds.size;
+  stats.gamesPlayed = gamesPlayed.size;
+
+  const pitcherDecisions = db.prepare(`
+    SELECT games.winnerTeamId, games.status, game_lineup_settings.teamId
+    FROM game_lineup_settings
+    JOIN games ON games.id = game_lineup_settings.gameId
+    WHERE game_lineup_settings.startingPitcherId = ?
+  `).all(playerId);
+  for (const decision of pitcherDecisions) {
+    if (decision.status !== 'completed' || !decision.winnerTeamId) continue;
+    if (decision.winnerTeamId === decision.teamId) stats.pitchingWins += 1;
+    else stats.pitchingLosses += 1;
   }
 
   const obpDenominator = stats.atBats + stats.walks + stats.hitByPitch + stats.sacrifices;
@@ -512,10 +640,18 @@ function derivePlayerStats(playerId) {
     ? (stats.hits + stats.walks + stats.hitByPitch) / obpDenominator
     : 0;
   const sluggingPercentage = stats.atBats > 0 ? stats.totalBases / stats.atBats : 0;
+  const pitchingInnings = stats.pitchingOuts / 3;
+  const whip = pitchingInnings > 0 ? (stats.walksAllowed + stats.hitsAllowed) / pitchingInnings : 0;
+  const battingAverageAgainst = stats.atBatsAgainst > 0 ? stats.hitsAllowed / stats.atBatsAgainst : 0;
+  const earnedRunAverage = pitchingInnings > 0 ? (stats.earnedRunsAllowed * 9) / pitchingInnings : 0;
 
   return {
     ...stats,
+    inningsPitched: formatInningsPitched(stats.pitchingOuts),
+    whip: roundStat(whip),
     battingAverage: roundStat(battingAverage),
+    battingAverageAgainst: roundStat(battingAverageAgainst),
+    earnedRunAverage: roundStat(earnedRunAverage),
     onBasePercentage: roundStat(onBasePercentage),
     sluggingPercentage: roundStat(sluggingPercentage),
     ops: roundStat(onBasePercentage + sluggingPercentage),
@@ -533,6 +669,7 @@ function serializeTournament(tournament) {
 function normalizeGame(game) {
   return {
     ...game,
+    time: game.time || '',
     status: game.status === 'scheduled' ? 'not_started' : game.status,
   };
 }
@@ -585,8 +722,41 @@ function getPlayer(playerId) {
   return db.prepare('SELECT * FROM players WHERE id = ?').get(id);
 }
 
-function getPlayerTeamId(playerId) {
-  return getPlayer(playerId)?.teamId || '';
+function normalizeTeamIdList(value) {
+  const values = Array.isArray(value) ? value : [value];
+  return values
+    .flatMap((item) => String(item || '').split(','))
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function validatePlayerTeamIds(body, fallbackTeamIds = []) {
+  const source = body?.teamIds !== undefined
+    ? body.teamIds
+    : body?.teamId !== undefined
+      ? body.teamId
+      : fallbackTeamIds;
+  const teamIds = [...new Set(normalizeTeamIdList(source))];
+  if (teamIds.length === 0) return { error: '球員至少需要一支球隊' };
+
+  for (const teamId of teamIds) {
+    const team = requireExistingTeam(teamId, '球隊');
+    if (team.error) return team;
+  }
+
+  return { value: teamIds };
+}
+
+function savePlayerTeamLinks(playerId, teamIds) {
+  const now = new Date().toISOString();
+  const tx = db.transaction(() => {
+    db.prepare('DELETE FROM player_teams WHERE playerId = ?').run(playerId);
+    for (const teamId of teamIds) {
+      db.prepare('INSERT INTO player_teams (playerId, teamId, createdAt) VALUES (?, ?, ?)')
+        .run(playerId, teamId, now);
+    }
+  });
+  tx();
 }
 
 function validateBaseStateInput(value, offenseTeamId, fallback = EMPTY_BASES) {
@@ -599,7 +769,7 @@ function validateBaseStateInput(value, offenseTeamId, fallback = EMPTY_BASES) {
   for (const runnerId of occupied) {
     const runner = getPlayer(runnerId);
     if (!runner) return { error: `無效的跑者 ID: ${runnerId}` };
-    if (offenseTeamId && runner.teamId !== offenseTeamId) {
+    if (offenseTeamId && !playerBelongsToTeam(runnerId, offenseTeamId)) {
       return { error: `壘上跑者必須屬於進攻球隊: ${runnerId}` };
     }
   }
@@ -707,6 +877,15 @@ function getAutomaticRunnerAction(result, currentBases) {
 
 function canReachOnDroppedThirdStrike(context) {
   return !context.bases?.first || Number(context.outsInHalf || 0) >= 2;
+}
+
+function isBatterRetiredOnInningEndingOut({ eventType, result, resultOuts, outsInHalf, batterId, bases }) {
+  if (eventType !== 'PLATE_APPEARANCE') return false;
+  if (Number(resultOuts || 0) <= 0) return false;
+  if (Number(outsInHalf || 0) + Number(resultOuts || 0) < 3) return false;
+  if (BATTER_RETIRED_RESULTS.has(result)) return true;
+  if (result !== 'FIELDERS_CHOICE' || !batterId) return false;
+  return !Object.values(bases || {}).includes(batterId);
 }
 
 function getGameLineupRows(gameId, teamId) {
@@ -821,6 +1000,10 @@ function deriveGameContext(game, events = listGameEvents(game.id)) {
 function buildGameEventSummary(game, events = listGameEvents(game.id)) {
   let homeRuns = 0;
   let awayRuns = 0;
+  let homeHits = 0;
+  let awayHits = 0;
+  let homeErrors = 0;
+  let awayErrors = 0;
   let outs = 0;
 
   const innings = [];
@@ -836,9 +1019,13 @@ function buildGameEventSummary(game, events = listGameEvents(game.id)) {
     if (event.half === 'top') {
       awayRuns += runs;
       row.top += runs;
+      if (HIT_RESULTS.has(event.result)) awayHits += 1;
+      if (event.result === 'ERROR') homeErrors += 1;
     } else {
       homeRuns += runs;
       row.bottom += runs;
+      if (HIT_RESULTS.has(event.result)) homeHits += 1;
+      if (event.result === 'ERROR') awayErrors += 1;
     }
     outs += Number(event.outs || 0);
   }
@@ -847,6 +1034,10 @@ function buildGameEventSummary(game, events = listGameEvents(game.id)) {
     eventCount: events.length,
     homeRuns,
     awayRuns,
+    homeHits,
+    awayHits,
+    homeErrors,
+    awayErrors,
     score: `${homeRuns}-${awayRuns}`,
     outs,
     innings: innings.sort((a, b) => a.inning - b.inning),
@@ -854,13 +1045,23 @@ function buildGameEventSummary(game, events = listGameEvents(game.id)) {
 }
 
 function attachGameEventSummary(game) {
-  const summary = buildGameEventSummary(game);
+  const events = listGameEvents(game.id);
+  const summary = buildGameEventSummary(game, events);
+  const context = deriveGameContext(game, events);
   return {
     ...game,
     eventCount: summary.eventCount,
     eventScore: summary.eventCount > 0 ? summary.score : game.score,
     homeRuns: summary.homeRuns,
     awayRuns: summary.awayRuns,
+    homeHits: summary.homeHits,
+    awayHits: summary.awayHits,
+    homeErrors: summary.homeErrors,
+    awayErrors: summary.awayErrors,
+    innings: summary.innings,
+    currentInning: context.inning,
+    currentHalf: context.half,
+    currentOutsInHalf: context.outsInHalf,
   };
 }
 
@@ -1032,8 +1233,17 @@ function validateGameEventInput(game, body) {
     }
   }
   const bases = context.outsInHalf + resultOuts >= 3 ? { ...EMPTY_BASES } : baseState.value;
-  const runs = parseInteger(body.runs, !hasManualRuns && automaticPlayAction ? automaticPlayAction.runs : 0);
-  const rbi = parseInteger(body.rbi, runs);
+  const submittedRuns = parseInteger(body.runs, !hasManualRuns && automaticPlayAction ? automaticPlayAction.runs : 0);
+  const batterRetiredThirdOut = isBatterRetiredOnInningEndingOut({
+    eventType,
+    result,
+    resultOuts,
+    outsInHalf: context.outsInHalf,
+    batterId,
+    bases: baseState.value,
+  });
+  const runs = batterRetiredThirdOut ? 0 : submittedRuns;
+  const rbi = batterRetiredThirdOut ? 0 : parseInteger(body.rbi, runs);
 
   if (!Number.isInteger(runs) || runs < 0 || runs > 4) {
     return { error: '得分必須是 0 到 4 的整數' };
@@ -1108,13 +1318,13 @@ function validateLineupInput(game, body) {
 
       const player = getPlayer(entry.playerId);
       if (!player) return { error: `無效的打序球員 ID: ${entry.playerId}` };
-      if (player.teamId !== teamId) return { error: `打序球員必須屬於該球隊: ${entry.playerId}` };
+      if (!playerBelongsToTeam(entry.playerId, teamId)) return { error: `打序球員必須屬於該球隊: ${entry.playerId}` };
     }
 
     const startingPitcherId = String(item?.startingPitcherId || battingOrder[0]?.playerId || '').trim();
     const pitcher = getPlayer(startingPitcherId);
     if (!pitcher) return { error: `無效的先發投手 ID: ${startingPitcherId}` };
-    if (pitcher.teamId !== teamId) return { error: `先發投手必須屬於該球隊: ${startingPitcherId}` };
+    if (!playerBelongsToTeam(startingPitcherId, teamId)) return { error: `先發投手必須屬於該球隊: ${startingPitcherId}` };
 
     value.push({
       teamId,
@@ -1146,6 +1356,7 @@ function saveGameLineups(game, lineups) {
 }
 
 seedDatabase();
+syncMissingPlayerTeamLinks();
 
 app.use(cors());
 app.use(express.json());
@@ -1384,13 +1595,13 @@ app.delete('/api/teams/:id', (req, res) => {
 app.post('/api/players', (req, res) => {
   const name = requireText(req.body.name, '球員姓名');
   if (name.error) return res.status(400).json({ error: name.error });
-  const teamId = requireExistingTeam(req.body.teamId, '球隊');
-  if (teamId.error) return res.status(400).json({ error: teamId.error });
+  const teamIds = validatePlayerTeamIds(req.body);
+  if (teamIds.error) return res.status(400).json({ error: teamIds.error });
 
   const player = {
     id: generateRecordId('p', 'players'),
     name: name.value,
-    teamId: teamId.value,
+    teamId: teamIds.value[0],
     position: '',
     jersey: req.body.jersey || '0',
     battingAverage: 0,
@@ -1402,6 +1613,7 @@ app.post('/api/players', (req, res) => {
 
   db.prepare('INSERT INTO players (id, name, teamId, position, jersey, battingAverage, ops, hr, rbi, sb, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
     .run(player.id, player.name, player.teamId, player.position, player.jersey, player.battingAverage, player.ops, player.hr, player.rbi, player.sb, 'active');
+  savePlayerTeamLinks(player.id, teamIds.value);
 
   res.status(201).json(serializePlayer(player));
 });
@@ -1411,15 +1623,13 @@ app.put('/api/players/:id', (req, res) => {
   if (!current) return res.status(404).json({ error: 'Player not found' });
   const name = requireText(req.body.name ?? current.name, '球員姓名');
   if (name.error) return res.status(400).json({ error: name.error });
-  const teamId = req.body.teamId === undefined
-    ? { value: current.teamId }
-    : requireExistingTeam(req.body.teamId, '球隊');
-  if (teamId.error) return res.status(400).json({ error: teamId.error });
+  const teamIds = validatePlayerTeamIds(req.body, getPlayerTeamIds(req.params.id));
+  if (teamIds.error) return res.status(400).json({ error: teamIds.error });
 
   const player = {
     ...current,
     name: name.value,
-    teamId: teamId.value,
+    teamId: teamIds.value[0],
     position: '',
     jersey: req.body.jersey || current.jersey,
     battingAverage: 0,
@@ -1431,11 +1641,13 @@ app.put('/api/players/:id', (req, res) => {
 
   db.prepare('UPDATE players SET name = ?, teamId = ?, position = ?, jersey = ?, battingAverage = ?, ops = ?, hr = ?, rbi = ?, sb = ?, status = ? WHERE id = ?')
     .run(player.name, player.teamId, player.position, player.jersey, player.battingAverage, player.ops, player.hr, player.rbi, player.sb, 'active', req.params.id);
+  savePlayerTeamLinks(req.params.id, teamIds.value);
 
   res.json(serializePlayer(player));
 });
 
 app.delete('/api/players/:id', (req, res) => {
+  db.prepare('DELETE FROM player_teams WHERE playerId = ?').run(req.params.id);
   const result = db.prepare('DELETE FROM players WHERE id = ?').run(req.params.id);
   if (result.changes === 0) return res.status(404).json({ error: 'Player not found' });
   res.json({ ok: true, deletedId: req.params.id });
@@ -1516,14 +1728,15 @@ app.post('/api/games', (req, res) => {
     homeTeamId: homeTeamId.value,
     awayTeamId: awayTeamId.value,
     date: req.body.date || new Date().toISOString().slice(0, 10),
+    time: String(req.body.time || '').trim(),
     venue: req.body.venue || '未定地點',
     score,
     winnerTeamId: deriveWinnerTeamIdFromScore(score, homeTeamId.value, awayTeamId.value),
     status,
   };
 
-  db.prepare('INSERT INTO games (id, tournamentId, homeTeamId, awayTeamId, date, venue, score, winnerTeamId, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    .run(game.id, game.tournamentId, game.homeTeamId, game.awayTeamId, game.date, game.venue, game.score, game.winnerTeamId, game.status);
+  db.prepare('INSERT INTO games (id, tournamentId, homeTeamId, awayTeamId, date, time, venue, score, winnerTeamId, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .run(game.id, game.tournamentId, game.homeTeamId, game.awayTeamId, game.date, game.time, game.venue, game.score, game.winnerTeamId, game.status);
 
   res.status(201).json(normalizeGame(game));
 });
@@ -1561,14 +1774,20 @@ app.put('/api/games/:id', (req, res) => {
     homeTeamId: homeTeamId.value,
     awayTeamId: awayTeamId.value,
     date: req.body.date || current.date,
+    time: req.body.time === undefined ? current.time || '' : String(req.body.time || '').trim(),
     venue: req.body.venue || current.venue,
     score,
     winnerTeamId: deriveWinnerTeamIdFromScore(score, homeTeamId.value, awayTeamId.value),
     status: req.body.status || current.status,
   };
 
-  db.prepare('UPDATE games SET tournamentId = ?, homeTeamId = ?, awayTeamId = ?, date = ?, venue = ?, score = ?, winnerTeamId = ?, status = ? WHERE id = ?')
-    .run(game.tournamentId, game.homeTeamId, game.awayTeamId, game.date, game.venue, game.score, game.winnerTeamId, game.status, req.params.id);
+  db.prepare('UPDATE games SET tournamentId = ?, homeTeamId = ?, awayTeamId = ?, date = ?, time = ?, venue = ?, score = ?, winnerTeamId = ?, status = ? WHERE id = ?')
+    .run(game.tournamentId, game.homeTeamId, game.awayTeamId, game.date, game.time, game.venue, game.score, game.winnerTeamId, game.status, req.params.id);
+
+  if (game.status === 'completed' && req.body.score === undefined) {
+    const updated = updateGameScoreFromEvents(req.params.id);
+    return res.json(normalizeGame(updated.game));
+  }
 
   res.json(normalizeGame(game));
 });
@@ -1580,8 +1799,9 @@ app.delete('/api/games/:id', (req, res) => {
 });
 
 app.post('/api/reset', (_, res) => {
-  db.exec('DELETE FROM game_events; DELETE FROM game_lineups; DELETE FROM game_lineup_settings; DELETE FROM games; DELETE FROM tournaments; DELETE FROM players; DELETE FROM teams;');
+  db.exec('DELETE FROM game_events; DELETE FROM game_lineups; DELETE FROM game_lineup_settings; DELETE FROM games; DELETE FROM tournaments; DELETE FROM player_teams; DELETE FROM players; DELETE FROM teams;');
   seedDatabase();
+  syncMissingPlayerTeamLinks();
   res.json({ ok: true, message: 'Demo data reset successfully.' });
 });
 

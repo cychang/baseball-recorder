@@ -15,6 +15,44 @@ const server = app.listen(0, '127.0.0.1');
 await new Promise((resolve) => server.once('listening', resolve));
 const baseUrl = `http://127.0.0.1:${server.address().port}`;
 
+function readPublicAsset(...segments) {
+  return fs.readFileSync(path.join(__dirname, '..', 'public', ...segments), 'utf8');
+}
+
+function readIndexHtml() {
+  return readPublicAsset('index.html');
+}
+
+function readClientSource() {
+  const scriptSources = fs.readdirSync(path.join(__dirname, '..', 'public', 'js'))
+    .filter((filename) => filename.endsWith('.js'))
+    .sort()
+    .map((filename) => readPublicAsset('js', filename));
+  return [
+    readPublicAsset('index.html'),
+    readPublicAsset('styles.css'),
+    ...scriptSources,
+  ].join('\n');
+}
+
+async function importClientRenderer() {
+  const originalDocument = globalThis.document;
+  globalThis.document = {
+    getElementById: () => null,
+    querySelector: () => null,
+    querySelectorAll: () => [],
+  };
+  try {
+    return await import(`../public/js/render-management.js?test=${Date.now()}`);
+  } finally {
+    globalThis.document = originalDocument;
+  }
+}
+
+async function importScoringRules() {
+  return import(`../public/js/scoring-rules.js?test=${Date.now()}`);
+}
+
 test.after(async () => {
   await new Promise((resolve, reject) => {
     server.close((error) => error ? reject(error) : resolve());
@@ -50,32 +88,48 @@ test('config exposes event and tournament enums used by the UI', async () => {
   assert.equal(response.body.enums.playResult.includes('OTHER'), false);
 });
 
-test('keeps overview as the leftmost tab while scorekeeper remains the default workspace', () => {
-  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
+test('defaults to games tab and hides settings from the main nav', () => {
+  const indexHtml = readIndexHtml();
+  const html = readClientSource();
   const scorekeeperNav = html.indexOf('data-target="scorekeeperPage">紀錄');
-  const overviewNav = html.indexOf('data-target="overviewPage">總覽');
-  const scorekeeperPage = html.indexOf('<section id="scorekeeperPage" class="page active">');
-  const gamesPage = html.indexOf('<section id="gamesPage" class="page">');
+  const teamsNav = html.indexOf('data-target="teamsPage">球隊');
+  const gamesNav = html.indexOf('data-target="gamesPage">比賽');
+  const settingsNav = html.indexOf('data-target="settingsPage">資料設定');
+  const scorekeeperPage = html.indexOf('<section id="scorekeeperPage" class="page">');
+  const gamesPage = html.indexOf('<section id="gamesPage" class="page active">');
 
+  assert.ok(indexHtml.includes('<link rel="stylesheet" href="/styles.css" />'));
+  assert.ok(indexHtml.includes('<script type="module" src="/js/app.js"></script>'));
+  assert.equal(indexHtml.includes('<style>'), false);
+  assert.equal(indexHtml.includes('<script>\n'), false);
+  assert.equal(html.includes('id="globalSearchInput"'), false);
   assert.ok(scorekeeperNav > -1);
-  assert.ok(overviewNav > -1);
-  assert.ok(overviewNav < scorekeeperNav);
+  assert.ok(teamsNav > -1);
+  assert.ok(gamesNav > -1);
+  assert.equal(settingsNav, -1);
+  assert.ok(html.includes('<section id="settingsPage" class="page">'));
+  assert.equal(html.includes('data-target="overviewPage">總覽'), false);
+  assert.equal(html.includes('<section id="overviewPage"'), false);
+  assert.ok(teamsNav < gamesNav);
+  assert.ok(gamesNav < scorekeeperNav);
   assert.ok(scorekeeperPage > -1);
+  assert.ok(gamesPage > -1);
   assert.ok(scorekeeperPage < gamesPage);
-  assert.equal(html.includes('<section id="overviewPage" class="page active">'), false);
   assert.ok(html.includes('id="lineupForm"'));
   assert.ok(html.includes('id="toggleLineupBtn"'));
   assert.ok(html.includes('aria-controls="lineupBody"'));
-  assert.ok(html.includes('id="lineupBody"'));
+  assert.ok(html.includes('id="lineupBody" class="lineup-body" hidden'));
+  assert.ok(html.includes('Order / 換人'));
   assert.ok(html.includes('id="traditionalScoreboard"'));
+  assert.ok(html.includes('id="scorekeeperSelector"'));
   const lineupForm = html.indexOf('id="lineupForm"');
   const traditionalScoreboard = html.indexOf('id="traditionalScoreboard"');
   const eventForm = html.indexOf('id="eventForm"');
   assert.ok(lineupForm > -1);
   assert.ok(traditionalScoreboard > -1);
   assert.ok(eventForm > -1);
-  assert.ok(lineupForm < traditionalScoreboard);
   assert.ok(traditionalScoreboard < eventForm);
+  assert.ok(eventForm < lineupForm);
   assert.ok(html.includes('id="fieldDiamond"'));
   assert.ok(html.includes('id="countPanel"'));
   assert.equal(html.includes('id="scoreboardActionPanel"'), false);
@@ -193,7 +247,7 @@ test('keeps overview as the leftmost tab while scorekeeper remains the default w
 });
 
 test('shows rule-driven play actions for hits and walks in the UI', () => {
-  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
+  const html = readClientSource();
 
   assert.ok(html.includes('function getAutomaticPlayAction'));
   assert.ok(html.includes('function applyDefaultPlaySelection'));
@@ -222,8 +276,8 @@ test('shows rule-driven play actions for hits and walks in the UI', () => {
   assert.ok(html.includes('function updateRunnerEventActionButtons'));
   assert.ok(html.includes('function requiresOccupiedBaseForResult'));
   assert.ok(html.includes('function updateResultActionAvailability'));
-  assert.ok(html.includes('button.disabled = requiresOccupiedBaseForResult(button.dataset.resultAction) && !hasOccupiedBase()'));
-  assert.ok(html.includes('button.disabled = !hasOccupiedBase()'));
+  assert.ok(html.includes('button.disabled = requiresOccupiedBaseForResult(button.dataset.resultAction) && !hasOccupiedBase(state.currentContext || {})'));
+  assert.ok(html.includes('button.disabled = !hasOccupiedBase(state.currentContext || {})'));
   assert.ok(html.includes('function startRunnerPointerDrag'));
   assert.ok(html.includes('function moveRunnerPointerDrag'));
   assert.ok(html.includes('function finishRunnerPointerDrag'));
@@ -269,7 +323,7 @@ test('shows rule-driven play actions for hits and walks in the UI', () => {
 });
 
 test('only exposes one-step undo for the latest play in the UI', () => {
-  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
+  const html = readClientSource();
 
   assert.ok(html.includes('data-undo-last-event'));
   assert.ok(html.includes('退回上一筆'));
@@ -281,7 +335,7 @@ test('only exposes one-step undo for the latest play in the UI', () => {
 });
 
 test('keeps player stats read-only and derived from play events in the UI', () => {
-  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
+  const html = readClientSource();
 
   assert.ok(html.includes('成績會由紀錄自動累加，不在球員資料手動輸入。'));
   assert.equal(html.includes('name="battingAverage"'), false);
@@ -291,28 +345,347 @@ test('keeps player stats read-only and derived from play events in the UI', () =
 });
 
 test('keeps management tabs list-first and opens create forms in a modal', () => {
-  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
+  const indexHtml = readIndexHtml();
   const sections = [
-    { id: 'teamsPage', listTitle: '球隊一覽', actionTitle: '球隊動作', createType: 'team', removedFormId: 'teamForm' },
-    { id: 'playersPage', listTitle: '球員列表', actionTitle: '球員動作', createType: 'player', removedFormId: 'playerForm' },
-    { id: 'tournamentsPage', listTitle: '盃賽列表', actionTitle: '盃賽動作', createType: 'tournament', removedFormId: 'tournamentForm' },
-    { id: 'gamesPage', listTitle: '比賽列表', actionTitle: '比賽動作', createType: 'game', removedFormId: 'gameForm' },
+    { id: 'playersPage', listTitle: '球員列表', createType: 'player', removedFormId: 'playerForm' },
+    { id: 'tournamentsPage', listTitle: '盃賽列表', createType: 'tournament', removedFormId: 'tournamentForm' },
   ];
 
   for (const section of sections) {
-    const start = html.indexOf(`<section id="${section.id}"`);
-    const end = html.indexOf('</section>', start);
-    const sectionHtml = html.slice(start, end);
+    const start = indexHtml.indexOf(`<section id="${section.id}"`);
+    const end = indexHtml.indexOf('</section>', start);
+    const sectionHtml = indexHtml.slice(start, end);
 
     assert.ok(start > -1);
-    assert.ok(sectionHtml.indexOf(section.listTitle) < sectionHtml.indexOf(section.actionTitle));
+    assert.ok(sectionHtml.includes(section.listTitle));
     assert.ok(sectionHtml.includes(`data-create="${section.createType}"`));
     assert.equal(sectionHtml.includes(`id="${section.removedFormId}"`), false);
+    assert.equal(sectionHtml.includes('動作</h2>'), false);
   }
 });
 
+test('keeps games tab compact with match details and right-side actions', () => {
+  const html = readClientSource();
+  const indexHtml = readIndexHtml();
+  const managementSource = readPublicAsset('js', 'render-management.js');
+  const eventHandlerSource = readPublicAsset('js', 'event-handlers.js');
+  const start = indexHtml.indexOf('<section id="gamesPage"');
+  const end = indexHtml.indexOf('</section>', start);
+  const gamesSectionHtml = indexHtml.slice(start, end);
+
+  assert.ok(start > -1);
+  assert.ok(gamesSectionHtml.includes('比賽列表'));
+  assert.ok(gamesSectionHtml.includes('data-create="game"'));
+  assert.ok(gamesSectionHtml.includes('id="gamesListDetail"'));
+  assert.equal(gamesSectionHtml.includes('id="gameSearchInput"'), false);
+  assert.equal(gamesSectionHtml.includes('id="gameStatusFilter"'), false);
+  assert.equal(gamesSectionHtml.includes('比賽動作'), false);
+  assert.equal(gamesSectionHtml.includes('比賽建立後回到列表'), false);
+  assert.equal((gamesSectionHtml.match(/data-create="game"/g) || []).length, 1);
+  assert.ok(html.includes('class="mini-card game-card"'));
+  assert.ok(html.includes('class="game-main"'));
+  assert.ok(html.includes('class="game-actions"'));
+  assert.ok(html.includes('data-card-actions-menu'));
+  assert.ok(html.includes("renderCardActions('game-actions-row'"));
+  assert.ok(html.includes('class="game-meta"'));
+  assert.ok(html.includes('name="time" type="time"'));
+  assert.ok(html.includes("const gameDateTime = [game.date || '未定日期', game.time || '未定時間'].join(' ');"));
+  assert.ok(html.includes("const statusKey = String(game.status || 'not_started').replace(/[^a-z_]/g, '');"));
+  assert.ok(html.includes('class="game-header"'));
+  assert.ok(html.includes('class="game-matchup"'));
+  assert.ok(html.includes('class="game-status status-${statusKey}"'));
+  assert.ok(html.includes('.game-status.status-live'));
+  assert.ok(html.includes('.game-status.status-completed'));
+  assert.ok(html.includes('.game-card { align-items: start; }'));
+  assert.ok(html.includes('.game-actions { align-self: start; align-items: flex-start; }'));
+  assert.ok(html.includes('盃賽'));
+  assert.ok(html.includes('class="game-scoreboard line-score-grid"'));
+  assert.ok(html.includes('class="scoreboard-cell scoreboard-team"'));
+  assert.ok(html.includes('class="scoreboard-cell scoreboard-heading"'));
+  assert.ok(html.includes('class="scoreboard-cell scoreboard-heading scoreboard-r-heading">R</div>'));
+  assert.ok(html.includes('class="scoreboard-cell scoreboard-heading">H</div>'));
+  assert.ok(html.includes('class="scoreboard-cell scoreboard-heading">E</div>'));
+  assert.ok(html.includes('getGameScoreboardInnings(game)'));
+  assert.ok(html.includes('class="scoreboard-cell scoreboard-run-total"'));
+  assert.equal(managementSource.includes('Math.max(9'), false);
+  assert.equal(managementSource.includes('終場 ${escapeHtml(score)}'), false);
+  assert.equal(managementSource.includes('class="game-score final-score"'), false);
+  assert.equal(managementSource.includes('inning-score-cells'), false);
+  assert.ok(managementSource.includes('--inning-count: ${innings.length};'));
+  assert.ok(managementSource.includes('shouldRenderGameLineScore(game)'));
+  assert.ok(eventHandlerSource.includes("event.target.closest('[data-score-game]')?.getAttribute('data-score-game')"));
+  assert.ok(html.includes('grid-template-columns: minmax(92px, 1.25fr)'));
+  assert.ok(html.includes('width: max-content'));
+  assert.ok(html.includes('.scoreboard-r-heading { color: #0b1118; background: var(--accent-2); }'));
+  assert.ok(html.includes('.scoreboard-run-total { color: #0b1118; background: var(--accent-2);'));
+  assert.ok(html.includes('border: 1px solid rgba(148,163,184,0.28); background: rgba(4,12,18,0.38);'));
+  assert.equal(html.includes('class="game-event-count"'), false);
+  assert.equal(html.includes('事件 ${eventCount}'), false);
+});
+
+test('uses current inning when rendering live game line scores', async () => {
+  const {
+    getGameScoreboardInnings,
+    shouldRenderGameLineScore,
+  } = await importClientRenderer();
+
+  assert.deepEqual(getGameScoreboardInnings({
+    status: 'live',
+    eventCount: 6,
+    currentInning: 2,
+    innings: [{ inning: 1, top: 0, bottom: 0 }],
+  }), [1, 2]);
+  assert.equal(shouldRenderGameLineScore({
+    status: 'live',
+    eventCount: 6,
+    currentInning: 2,
+    innings: [{ inning: 1, top: 0, bottom: 0 }],
+  }), true);
+  assert.equal(shouldRenderGameLineScore({
+    status: 'not_started',
+    eventCount: 0,
+    currentInning: 1,
+    innings: [],
+  }), false);
+  assert.equal(shouldRenderGameLineScore({
+    status: 'completed',
+    eventCount: 0,
+    currentInning: 1,
+    innings: [],
+  }), true);
+  assert.deepEqual(getGameScoreboardInnings({
+    status: 'completed',
+    eventCount: 36,
+    currentInning: 7,
+    innings: [
+      { inning: 1, top: 0, bottom: 0 },
+      { inning: 2, top: 0, bottom: 0 },
+      { inning: 3, top: 0, bottom: 0 },
+      { inning: 4, top: 0, bottom: 0 },
+      { inning: 5, top: 0, bottom: 0 },
+      { inning: 6, top: 0, bottom: 0 },
+    ],
+  }), [1, 2, 3, 4, 5, 6]);
+});
+
+test('scorekeeper exposes a finish game action', () => {
+  const html = readIndexHtml();
+  const domSource = readPublicAsset('js', 'dom.js');
+  const handlersSource = readPublicAsset('js', 'event-handlers.js');
+
+  assert.ok(html.includes('id="finishGameBtn"'));
+  assert.ok(html.includes('data-finish-game'));
+  assert.ok(html.includes('比賽結束'));
+  assert.ok(domSource.includes('finishGameBtn: document.getElementById(\'finishGameBtn\')'));
+  assert.ok(handlersSource.includes("event.target.closest('[data-finish-game]')"));
+  assert.ok(handlersSource.includes("body: JSON.stringify({ status: 'completed' })"));
+  assert.ok(handlersSource.includes('await openScorekeeper(state.currentScoreGameId);'));
+});
+
+test('keeps team and player cards compact with right-side actions', () => {
+  const html = readClientSource();
+  const indexHtml = readIndexHtml();
+  const teamsStart = indexHtml.indexOf('<section id="teamsPage"');
+  const playersStart = indexHtml.indexOf('<section id="playersPage"');
+  const tournamentsStart = indexHtml.indexOf('<section id="tournamentsPage"');
+  const teamsSectionHtml = indexHtml.slice(teamsStart, playersStart);
+
+  assert.ok(teamsStart > -1);
+  assert.ok(playersStart > teamsStart);
+  assert.equal(teamsSectionHtml.includes('球隊動作'), false);
+  assert.equal(teamsSectionHtml.includes('列表是主要工作區'), false);
+  assert.equal((teamsSectionHtml.match(/data-create="team"/g) || []).length, 1);
+  assert.ok(tournamentsStart > playersStart);
+  assert.ok(html.includes('class="mini-card team-card"'));
+  assert.ok(html.includes('class="team-title-line"'));
+  assert.ok(html.includes('class="team-actions"'));
+  assert.ok(html.includes("renderCardActions('team-actions-row'"));
+  assert.ok(html.includes('球員 ${teamPlayers}'));
+  assert.ok(html.includes('data-team-card="${team.id}"'));
+  assert.ok(html.includes('class="team-tournament-links"'));
+  assert.ok(html.includes('<a class="link-chip tournament-link" href="#tournamentsPage"'));
+  assert.ok(html.includes('data-open-tournament="${tournamentId}"'));
+  assert.equal(html.includes('參加盃賽'), false);
+  assert.ok(html.includes('class="mini-card player-card"'));
+  assert.ok(html.includes('class="player-main"'));
+  assert.ok(html.includes('class="player-actions"'));
+  assert.ok(html.includes("renderCardActions('player-actions-row'"));
+  assert.ok(html.includes('.player-card { grid-template-columns: 1fr; align-items: start; padding-right: 16px; }'));
+  assert.ok(html.includes('.player-heading-line { padding-right: 150px; }'));
+  assert.ok(html.includes('.player-actions { position: absolute; top: 14px; right: 14px;'));
+  assert.ok(html.includes('class="player-name-line"'));
+  assert.ok(html.includes('class="player-team-links"'));
+  assert.ok(html.includes('<a class="link-chip player-team-link" href="#teamsPage"'));
+  assert.ok(html.includes('data-open-team="${team.id}"'));
+  assert.ok(html.includes('class="player-stat-lines"'));
+  assert.ok(html.includes('function renderPlayerStatTable(label, columns, className)'));
+  assert.ok(html.includes('class="player-stat-table ${className}"'));
+  assert.ok(html.includes('class="player-stat-grid" style="--stat-count: ${columns.length};"'));
+  assert.ok(html.includes('grid-template-columns: 42px minmax(0, 1fr)'));
+  assert.ok(html.includes('grid-template-columns: repeat(var(--stat-count), minmax(40px, 1fr))'));
+  assert.ok(html.includes("renderPlayerStatTable('打者', battingStats, 'batting-stat-table')"));
+  assert.ok(html.includes("renderPlayerStatTable('投手', pitchingStats, 'pitching-stat-table')"));
+  assert.ok(html.includes("['G', player.gamesPlayed || 0]"));
+  assert.ok(html.includes("['PA', player.plateAppearances || 0]"));
+  assert.ok(html.includes("['AB', player.atBats || 0]"));
+  assert.ok(html.includes("['2B', player.doubles || 0]"));
+  assert.ok(html.includes("['3B', player.triples || 0]"));
+  assert.ok(html.includes("['BB', player.walks || 0]"));
+  assert.ok(html.includes("['SO', player.strikeouts || 0]"));
+  assert.ok(html.includes("['OBP', formatStat(player.onBasePercentage)]"));
+  assert.ok(html.includes("['SLG', formatStat(player.sluggingPercentage)]"));
+  assert.ok(html.includes("['AVG', formatStat(player.battingAverage)]"));
+  assert.ok(html.includes("['W', player.pitchingWins || 0]"));
+  assert.ok(html.includes("['L', player.pitchingLosses || 0]"));
+  assert.ok(html.includes("['SV', player.saves || 0]"));
+  assert.ok(html.includes("['ERA', formatStat(player.earnedRunAverage)]"));
+  assert.equal(html.includes("['2B', player.doublesAllowed || 0]"), false);
+  assert.equal(html.includes("['3B', player.triplesAllowed || 0]"), false);
+  assert.equal(html.includes("['AVG', formatStat(player.battingAverageAgainst)]"), false);
+  assert.equal(html.includes('class="stat-line batting-stat-line"'), false);
+  assert.equal(html.includes('class="stat-line pitching-stat-line"'), false);
+  assert.equal(html.includes('G ${player.gamesPlayed || 0}'), false);
+  const battingColumnOrder = [
+    "['G', player.gamesPlayed || 0]",
+    "['PA', player.plateAppearances || 0]",
+    "['AB', player.atBats || 0]",
+    "['H', player.hits || 0]",
+    "['2B', player.doubles || 0]",
+    "['3B', player.triples || 0]",
+    "['HR', player.hr || 0]",
+    "['BB', player.walks || 0]",
+    "['SO', player.strikeouts || 0]",
+    "['RBI', player.rbi || 0]",
+    "['R', player.runsScored || 0]",
+    "['OBP', formatStat(player.onBasePercentage)]",
+    "['SLG', formatStat(player.sluggingPercentage)]",
+    "['AVG', formatStat(player.battingAverage)]",
+  ];
+  const pitchingColumnOrder = [
+    "['W', player.pitchingWins || 0]",
+    "['L', player.pitchingLosses || 0]",
+    "['SV', player.saves || 0]",
+    "['G', player.pitchingGames || 0]",
+    "['IP', player.inningsPitched || '0']",
+    "['AB', player.atBatsAgainst || 0]",
+    "['H', player.hitsAllowed || 0]",
+    "['HR', player.homeRunsAllowed || 0]",
+    "['BB', player.walksAllowed || 0]",
+    "['SO', player.strikeoutsThrown || 0]",
+    "['R', player.runsAllowed || 0]",
+    "['ER', player.earnedRunsAllowed || 0]",
+    "['ERA', formatStat(player.earnedRunAverage)]",
+  ];
+  for (let index = 1; index < battingColumnOrder.length; index += 1) {
+    assert.ok(html.indexOf(battingColumnOrder[index - 1]) < html.indexOf(battingColumnOrder[index]));
+  }
+  for (let index = 1; index < pitchingColumnOrder.length; index += 1) {
+    assert.ok(html.indexOf(pitchingColumnOrder[index - 1]) < html.indexOf(pitchingColumnOrder[index]));
+  }
+  assert.equal(html.includes('WHIP ${formatStat(player.whip)}'), false);
+  assert.ok(html.includes("<span class=\"jersey-number\">#${escapeHtml(player.jersey || '--')}</span>"));
+  assert.equal(html.includes('背號 ${escapeHtml(player.jersey)}'), false);
+  assert.equal(html.includes('球員動作'), false);
+  assert.ok(html.includes('class="mini-card tournament-card"'));
+  assert.ok(html.includes('class="tournament-actions"'));
+  assert.ok(html.includes("renderCardActions('tournament-actions-row'"));
+  assert.ok(html.includes('賽季 ${escapeHtml(item.season)} · 比賽 ${gameCount}'));
+  assert.equal(html.includes('<span class="chip">${escapeHtml(item.season)}</span>'), false);
+  assert.ok(html.includes('class="tournament-game-links"'));
+  assert.ok(html.includes('<a class="link-chip tournament-game-link" href="#gamesPage"'));
+  assert.ok(html.includes('data-open-game="${game.id}"'));
+  assert.ok(html.includes('formatTournamentGameResult(game, teams)'));
+  assert.equal(html.includes('盃賽動作'), false);
+});
+
+test('defines mobile-first card actions and scorekeeper layout', () => {
+  const html = readClientSource();
+  const styles = readPublicAsset('styles.css');
+  const appSource = readPublicAsset('js', 'app.js');
+  const handlersSource = readPublicAsset('js', 'event-handlers.js');
+
+  assert.ok(styles.includes('@media (max-width: 640px)'));
+  assert.ok(styles.includes('[hidden] { display: none !important; }'));
+  assert.ok(styles.includes('@media (min-width: 641px)'));
+  assert.ok(styles.includes('@media (min-width: 1025px)'));
+  assert.ok(styles.includes('.game-card, .team-card, .player-card, .tournament-card'));
+  assert.ok(styles.includes('grid-template-columns: 1fr'));
+  assert.ok(styles.includes('.card-actions-menu'));
+  assert.ok(styles.includes('[data-card-actions-menu]'));
+  assert.ok(styles.includes('.card-actions-inline'));
+  assert.ok(styles.includes('.actions-open .card-actions-inline'));
+  assert.ok(styles.includes('.scorebug'));
+  assert.ok(styles.includes('.scorekeeper-panel'));
+  assert.ok(styles.includes('.play-event-panel'));
+  assert.ok(styles.includes('.pitch-panel'));
+  assert.equal(styles.includes('min-width: 520px'), false);
+  assert.equal(styles.includes('min-width: 640px'), false);
+  assert.equal(styles.includes('min-width: 760px'), false);
+  assert.equal(styles.includes('grid-template-columns: 1fr 250px 160px'), false);
+  assert.ok(html.includes('class="line-score-table"'));
+  assert.ok(html.includes('class="scorekeeper-line-score line-score-grid"'));
+  assert.ok(handlersSource.includes("event.target.closest('[data-card-actions-menu]')"));
+  assert.ok(handlersSource.includes("event.target.closest('[data-open-team]')"));
+  assert.ok(handlersSource.includes("event.target.closest('[data-open-game]')"));
+  assert.ok(handlersSource.includes("closest('.mini-card')"));
+  assert.ok(handlersSource.includes("classList.toggle('actions-open'"));
+  assert.ok(appSource.includes('state.lineupExpanded = false;'));
+  assert.ok(appSource.includes('ui.scorekeeperSelector.hidden = true;'));
+  assert.ok(appSource.includes('ui.scorekeeperSelector.hidden = false;'));
+});
+
+test('imports scorekeeper helpers used by the play submit flow', () => {
+  const handlersSource = readPublicAsset('js', 'event-handlers.js');
+  const scorekeeperImportStart = handlersSource.indexOf('} from \'./scorekeeper-ui.js\';');
+  const scorekeeperImport = handlersSource.slice(0, scorekeeperImportStart);
+
+  assert.ok(handlersSource.includes('const bases = getBaseStateBoardValues();'));
+  assert.ok(scorekeeperImportStart > -1);
+  assert.ok(scorekeeperImport.includes('getBaseStateBoardValues'));
+});
+
+test('uses current scoring context to enable occupied-base actions', () => {
+  const handlersSource = readPublicAsset('js', 'event-handlers.js');
+  const scorekeeperSource = readPublicAsset('js', 'scorekeeper-ui.js');
+
+  assert.ok(handlersSource.includes('requiresOccupiedBaseForResult(resultAction) && !hasOccupiedBase(state.currentContext || {})'));
+  assert.ok(handlersSource.includes('if (!hasOccupiedBase(state.currentContext || {})) return;'));
+  assert.ok(scorekeeperSource.includes('button.disabled = requiresOccupiedBaseForResult(button.dataset.resultAction) && !hasOccupiedBase(state.currentContext || {})'));
+  assert.ok(scorekeeperSource.includes('button.disabled = !hasOccupiedBase(state.currentContext || {})'));
+  assert.equal(handlersSource.includes('requiresOccupiedBaseForResult(resultAction) && !hasOccupiedBase())'), false);
+  assert.equal(scorekeeperSource.includes('!hasOccupiedBase()'), false);
+});
+
+test('does not preview runs when the inning-ending out retires the batter', async () => {
+  const { summarizeRunnerDestinations } = await importScoringRules();
+
+  const inningEndingGroundout = summarizeRunnerDestinations(
+    { third: 'home', batter: 'out' },
+    {
+      outsInHalf: 2,
+      batterId: 'p12',
+      bases: { first: '', second: '', third: 'p03' },
+    },
+    true,
+  );
+  assert.equal(inningEndingGroundout.runs, 0);
+  assert.equal(inningEndingGroundout.outs, 1);
+
+  const secondOutGroundout = summarizeRunnerDestinations(
+    { third: 'home', batter: 'out' },
+    {
+      outsInHalf: 1,
+      batterId: 'p12',
+      bases: { first: '', second: '', third: 'p03' },
+    },
+    true,
+  );
+  assert.equal(secondOutGroundout.runs, 1);
+  assert.equal(secondOutGroundout.outs, 1);
+});
+
 test('locks batting order selects to one slot per player in the UI', () => {
-  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
+  const html = readClientSource();
 
   assert.ok(html.includes('function updateLineupPlayerLocks()'));
   assert.ok(html.includes('selectedPlayersByTeam'));
@@ -1269,6 +1642,145 @@ test('advances runners by one base on sacrifice plays by default', async () => {
   assert.equal(sacrifice.body.context.batterId, 'p13');
 });
 
+test('does not count runs on a third out that retires the batter before first', async () => {
+  const game = await request('/api/games', {
+    method: 'POST',
+    body: {
+      tournamentId: 'cup01',
+      homeTeamId: 't01',
+      awayTeamId: 't02',
+      date: '2026-09-22',
+      venue: '第三出局得分測試球場',
+      status: 'live',
+    },
+  });
+
+  await request(`/api/games/${game.body.id}/lineups`, {
+    method: 'PUT',
+    body: {
+      lineups: [
+        { teamId: 't02', battingOrder: ['p03', 'p12', 'p13'] },
+        { teamId: 't01', battingOrder: ['p01', 'p02', 'p05'] },
+      ],
+    },
+  });
+
+  const setup = await request(`/api/games/${game.body.id}/events`, {
+    method: 'POST',
+    body: {
+      eventType: 'NOTE',
+      outs: 2,
+      bases: { first: '', second: '', third: 'p03' },
+    },
+  });
+  assert.equal(setup.status, 201);
+  assert.equal(setup.body.context.outsInHalf, 2);
+  assert.deepEqual(setup.body.context.bases, { first: '', second: '', third: 'p03' });
+
+  const groundout = await request(`/api/games/${game.body.id}/events`, {
+    method: 'POST',
+    body: {
+      eventType: 'PLATE_APPEARANCE',
+      result: 'GROUNDOUT',
+      fielderPosition: 'SS',
+      runs: 1,
+      rbi: 1,
+      outs: 1,
+      bases: { first: '', second: '', third: '' },
+    },
+  });
+
+  assert.equal(groundout.status, 201);
+  assert.equal(groundout.body.event.runs, 0);
+  assert.equal(groundout.body.event.rbi, 0);
+  assert.equal(groundout.body.summary.awayRuns, 0);
+  assert.equal(groundout.body.summary.score, '0-0');
+  assert.equal(groundout.body.context.half, 'bottom');
+
+  const fielderChoiceGame = await request('/api/games', {
+    method: 'POST',
+    body: {
+      tournamentId: 'cup01',
+      homeTeamId: 't01',
+      awayTeamId: 't02',
+      date: '2026-09-23',
+      venue: '野選第三出局得分測試球場',
+      status: 'live',
+    },
+  });
+  await request(`/api/games/${fielderChoiceGame.body.id}/lineups`, {
+    method: 'PUT',
+    body: {
+      lineups: [
+        { teamId: 't02', battingOrder: ['p03', 'p12', 'p13'] },
+        { teamId: 't01', battingOrder: ['p01', 'p02', 'p05'] },
+      ],
+    },
+  });
+  await request(`/api/games/${fielderChoiceGame.body.id}/events`, {
+    method: 'POST',
+    body: {
+      eventType: 'NOTE',
+      outs: 2,
+      bases: { first: '', second: '', third: 'p03' },
+    },
+  });
+  const fielderChoiceBatterOut = await request(`/api/games/${fielderChoiceGame.body.id}/events`, {
+    method: 'POST',
+    body: {
+      eventType: 'PLATE_APPEARANCE',
+      result: 'FIELDERS_CHOICE',
+      runs: 1,
+      rbi: 1,
+      outs: 1,
+      bases: { first: '', second: '', third: '' },
+    },
+  });
+
+  assert.equal(fielderChoiceBatterOut.status, 201);
+  assert.equal(fielderChoiceBatterOut.body.event.runs, 0);
+  assert.equal(fielderChoiceBatterOut.body.event.rbi, 0);
+  assert.equal(fielderChoiceBatterOut.body.summary.awayRuns, 0);
+
+  const loadedDoublePlayGame = await request('/api/games', {
+    method: 'POST',
+    body: {
+      tournamentId: 'cup01',
+      homeTeamId: 't01',
+      awayTeamId: 't02',
+      date: '2026-09-24',
+      venue: '一出局滿壘雙殺第三出局測試球場',
+      status: 'live',
+    },
+  });
+  await request(`/api/games/${loadedDoublePlayGame.body.id}/lineups`, {
+    method: 'PUT',
+    body: {
+      lineups: [
+        { teamId: 't02', battingOrder: ['p03', 'p12', 'p13', 'p14'] },
+        { teamId: 't01', battingOrder: ['p01', 'p02', 'p05', 'p06'] },
+      ],
+    },
+  });
+  await request(`/api/games/${loadedDoublePlayGame.body.id}/events`, {
+    method: 'POST',
+    body: {
+      eventType: 'NOTE',
+      outs: 1,
+      bases: { first: 'p13', second: 'p12', third: 'p03' },
+    },
+  });
+  const loadedDoublePlayThirdOut = await request(`/api/games/${loadedDoublePlayGame.body.id}/events`, {
+    method: 'POST',
+    body: { eventType: 'PLATE_APPEARANCE', result: 'DOUBLE_PLAY' },
+  });
+
+  assert.equal(loadedDoublePlayThirdOut.status, 201);
+  assert.equal(loadedDoublePlayThirdOut.body.event.runs, 0);
+  assert.equal(loadedDoublePlayThirdOut.body.summary.awayRuns, 0);
+  assert.equal(loadedDoublePlayThirdOut.body.context.half, 'bottom');
+});
+
 test('turns strike three into a strikeout and supports dropped third strike reach', async () => {
   const game = await request('/api/games', {
     method: 'POST',
@@ -1415,6 +1927,7 @@ test('creates teams, players, tournaments, and games with simplified fields', as
       homeTeamId: team.body.id,
       awayTeamId: 't01',
       date: '2026-09-02',
+      time: '18:35',
       venue: '洲際棒球場',
     },
   });
@@ -1422,6 +1935,7 @@ test('creates teams, players, tournaments, and games with simplified fields', as
   assert.equal(game.body.score, '0-0');
   assert.equal(game.body.winnerTeamId, '');
   assert.equal(game.body.status, 'not_started');
+  assert.equal(game.body.time, '18:35');
 
   const scoredGame = await request('/api/games', {
     method: 'POST',
@@ -1439,6 +1953,74 @@ test('creates teams, players, tournaments, and games with simplified fields', as
   assert.equal(scoredGame.status, 201);
   assert.notEqual(scoredGame.body.id, game.body.id);
   assert.equal(scoredGame.body.winnerTeamId, team.body.id);
+  assert.equal(scoredGame.body.time, '');
+});
+
+test('supports players belonging to multiple teams', async () => {
+  const teamA = await request('/api/teams', {
+    method: 'POST',
+    body: { name: '多隊 A' },
+  });
+  const teamB = await request('/api/teams', {
+    method: 'POST',
+    body: { name: '多隊 B' },
+  });
+  const player = await request('/api/players', {
+    method: 'POST',
+    body: { name: '跨隊球員', teamIds: [teamA.body.id, teamB.body.id], jersey: '34' },
+  });
+
+  assert.equal(player.status, 201);
+  assert.equal(player.body.teamId, teamA.body.id);
+  assert.deepEqual(player.body.teamIds, [teamA.body.id, teamB.body.id]);
+  assert.deepEqual(player.body.teams.map((team) => team.id), [teamA.body.id, teamB.body.id]);
+
+  const updated = await request(`/api/players/${player.body.id}`, {
+    method: 'PUT',
+    body: { name: '跨隊球員', teamIds: [teamB.body.id], jersey: '35' },
+  });
+
+  assert.equal(updated.status, 200);
+  assert.equal(updated.body.teamId, teamB.body.id);
+  assert.deepEqual(updated.body.teamIds, [teamB.body.id]);
+});
+
+test('allows lineup selection from any team linked to the player', async () => {
+  const linkedPlayer = await request('/api/players', {
+    method: 'POST',
+    body: {
+      name: '雙隊打者',
+      jersey: '88',
+      teamIds: ['t02', 't01'],
+    },
+  });
+  assert.equal(linkedPlayer.status, 201);
+  assert.ok(linkedPlayer.body.teamIds.includes('t01'));
+
+  const game = await request('/api/games', {
+    method: 'POST',
+    body: {
+      tournamentId: 'cup01',
+      homeTeamId: 't01',
+      awayTeamId: 't02',
+      date: '2026-10-02',
+      venue: '多隊測試球場',
+      status: 'live',
+    },
+  });
+
+  const lineup = await request(`/api/games/${game.body.id}/lineups`, {
+    method: 'PUT',
+    body: {
+      lineups: [
+        { teamId: 't01', battingOrder: [linkedPlayer.body.id, 'p01'], startingPitcherId: 'p01' },
+        { teamId: 't02', battingOrder: ['p12', 'p13'], startingPitcherId: 'p12' },
+      ],
+    },
+  });
+
+  assert.equal(lineup.status, 200);
+  assert.equal(lineup.body.lineups.t01.battingOrder[0].playerId, linkedPlayer.body.id);
 });
 
 test('derives player batting stats from recorded play events', async () => {
@@ -1504,13 +2086,52 @@ test('derives player batting stats from recorded play events', async () => {
   assert.equal(player.body.plateAppearances, 1);
   assert.equal(player.body.atBats, 1);
   assert.equal(player.body.hits, 1);
+  assert.equal(player.body.doubles, 0);
+  assert.equal(player.body.triples, 0);
   assert.equal(player.body.hr, 1);
+  assert.equal(player.body.walks, 0);
+  assert.equal(player.body.strikeouts, 0);
   assert.equal(player.body.rbi, 1);
+  assert.equal(player.body.runsScored, 1);
   assert.equal(player.body.totalBases, 4);
   assert.equal(player.body.battingAverage, 1);
   assert.equal(player.body.onBasePercentage, 1);
   assert.equal(player.body.sluggingPercentage, 4);
   assert.equal(player.body.ops, 5);
+
+  await request(`/api/games/${game.body.id}/events`, {
+    method: 'POST',
+    body: {
+      eventType: 'PLATE_APPEARANCE',
+      result: 'STRIKEOUT',
+      runs: 0,
+      outs: 1,
+      bases: { first: '', second: '', third: '' },
+    },
+  });
+
+  const pitcher = await request(`/api/players/${homePitcher.body.id}`);
+
+  assert.equal(pitcher.status, 200);
+  assert.equal(pitcher.body.pitchingGames, 1);
+  assert.equal(pitcher.body.pitchingWins, 0);
+  assert.equal(pitcher.body.pitchingLosses, 0);
+  assert.equal(pitcher.body.saves, 0);
+  assert.equal(pitcher.body.battersFaced, 2);
+  assert.equal(pitcher.body.atBatsAgainst, 2);
+  assert.equal(pitcher.body.pitchingOuts, 1);
+  assert.equal(pitcher.body.inningsPitched, '0.1');
+  assert.equal(pitcher.body.hitsAllowed, 1);
+  assert.equal(pitcher.body.doublesAllowed, 0);
+  assert.equal(pitcher.body.triplesAllowed, 0);
+  assert.equal(pitcher.body.homeRunsAllowed, 1);
+  assert.equal(pitcher.body.runsAllowed, 1);
+  assert.equal(pitcher.body.earnedRunsAllowed, 1);
+  assert.equal(pitcher.body.walksAllowed, 0);
+  assert.equal(pitcher.body.strikeoutsThrown, 1);
+  assert.equal(pitcher.body.battingAverageAgainst, 0.5);
+  assert.equal(pitcher.body.earnedRunAverage, 27);
+  assert.equal(pitcher.body.whip, 3);
 });
 
 test('records game events and derives the game score from the timeline', async () => {
@@ -1539,6 +2160,120 @@ test('records game events and derives the game score from the timeline', async (
   assert.equal(game.score, '0-1');
   assert.equal(game.eventCount, 1);
   assert.equal(game.eventScore, '0-1');
+});
+
+test('finishes a game with score and winner derived from recorded events', async () => {
+  const game = await request('/api/games', {
+    method: 'POST',
+    body: {
+      tournamentId: 'cup01',
+      homeTeamId: 't01',
+      awayTeamId: 't02',
+      date: '2026-09-21',
+      venue: '完賽測試球場',
+      status: 'live',
+      score: '0-0',
+    },
+  });
+
+  const event = await request(`/api/games/${game.body.id}/events`, {
+    method: 'POST',
+    body: {
+      inning: 1,
+      half: 'top',
+      eventType: 'PLATE_APPEARANCE',
+      result: 'SINGLE',
+      runs: 2,
+      bases: { first: 'p03', second: '', third: '' },
+    },
+  });
+  assert.equal(event.status, 201);
+
+  const staleManualScore = await request(`/api/games/${game.body.id}`, {
+    method: 'PUT',
+    body: {
+      score: '9-9',
+      status: 'live',
+    },
+  });
+  assert.equal(staleManualScore.status, 200);
+  assert.equal(staleManualScore.body.score, '9-9');
+
+  const finished = await request(`/api/games/${game.body.id}`, {
+    method: 'PUT',
+    body: {
+      status: 'completed',
+    },
+  });
+
+  assert.equal(finished.status, 200);
+  assert.equal(finished.body.status, 'completed');
+  assert.equal(finished.body.score, '0-2');
+  assert.equal(finished.body.winnerTeamId, 't02');
+});
+
+test('overview exposes current inning after a scoreless inning change', async () => {
+  const game = await request('/api/games', {
+    method: 'POST',
+    body: {
+      tournamentId: 'cup01',
+      homeTeamId: 't01',
+      awayTeamId: 't02',
+      date: '2026-09-20',
+      venue: '第二局測試球場',
+      status: 'live',
+    },
+  });
+
+  await request(`/api/games/${game.body.id}/lineups`, {
+    method: 'PUT',
+    body: {
+      lineups: [
+        { teamId: 't02', battingOrder: ['p03', 'p12', 'p13'] },
+        { teamId: 't01', battingOrder: ['p01', 'p02', 'p05'] },
+      ],
+    },
+  });
+
+  const topOuts = [
+    { result: 'GROUNDOUT', fielderPosition: 'SS' },
+    { result: 'FLYOUT', fielderPosition: 'CF' },
+    { result: 'STRIKEOUT' },
+  ];
+  for (const play of topOuts) {
+    const response = await request(`/api/games/${game.body.id}/events`, {
+      method: 'POST',
+      body: {
+        eventType: 'PLATE_APPEARANCE',
+        ...play,
+      },
+    });
+    assert.equal(response.status, 201);
+  }
+
+  const bottomOuts = [
+    { result: 'GROUNDOUT', fielderPosition: '2B' },
+    { result: 'FLYOUT', fielderPosition: 'RF' },
+    { result: 'STRIKEOUT' },
+  ];
+  for (const play of bottomOuts) {
+    const response = await request(`/api/games/${game.body.id}/events`, {
+      method: 'POST',
+      body: {
+        eventType: 'PLATE_APPEARANCE',
+        ...play,
+      },
+    });
+    assert.equal(response.status, 201);
+  }
+
+  const overview = await request('/api/overview');
+  const listedGame = overview.body.games.find((entry) => entry.id === game.body.id);
+
+  assert.equal(listedGame.eventCount, 6);
+  assert.equal(listedGame.currentInning, 2);
+  assert.equal(listedGame.currentHalf, 'top');
+  assert.deepEqual(listedGame.innings, [{ inning: 1, top: 0, bottom: 0 }]);
 });
 
 test('rejects invalid game event input at the API boundary', async () => {
